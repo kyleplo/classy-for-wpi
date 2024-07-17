@@ -1,13 +1,6 @@
 import { verifyKey, InteractionType, InteractionResponseType, InteractionResponseFlags } from "discord-interactions";
 import { classes } from "./db";
 
-declare interface Env {
-	DB: D1Database,
-	DISCORD_PUBLIC_KEY: string,
-	DISCORD_APPLICATION_ID: string,
-	DISCORD_TOKEN: string
-}
-
 class JsonResponse extends Response {
   constructor(body: object, init?: ResponseInit) {
     const jsonBody = JSON.stringify(body);
@@ -61,7 +54,7 @@ export default {
 
 		if(interaction.type === InteractionType.APPLICATION_COMMAND || interaction.type === 2 /* user context menu */){
 			const userId = interaction?.member?.user?.id || interaction?.user?.id;
-			const options = interaction.data.options ? parseOptions(interaction.data.options) : new Map().set("user", interaction.data["target_id"]);
+			const options = (interaction.type === InteractionType.APPLICATION_COMMAND) ? parseOptions(interaction.data.options) : (new Map().set("user", interaction.data["target_id"]));
 
 			switch (interaction.data.name.toLowerCase()) {
 				case "schedule":
@@ -187,7 +180,7 @@ export default {
 						}
 					});
 				case "mutuals":
-				case "Mutual Classes":
+				case "mutual classes":
 					const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ?")
 					const allSections = await env.DB.batch([
 						getUserSections.bind(userId),
