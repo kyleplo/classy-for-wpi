@@ -59,9 +59,9 @@ export default {
 			});
 		}
 
-		if(interaction.type === InteractionType.APPLICATION_COMMAND){
+		if(interaction.type === InteractionType.APPLICATION_COMMAND || interaction.type === 2 /* user context menu */){
 			const userId = interaction?.member?.user?.id || interaction?.user?.id;
-			const options = parseOptions(interaction.data.options)
+			const options = interaction.data.options ? parseOptions(interaction.data.options) : new Map().set("user", interaction.data["target_id"]);
 
 			switch (interaction.data.name.toLowerCase()) {
 				case "schedule":
@@ -93,11 +93,11 @@ export default {
 						}
 					});
 				case "addclass":
-					if(!classes[options.get("class")?.toUpperCase() as string]){
+					if(!classes[options.get("class") as string]){
 						return new JsonResponse({
 							type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 							data: {
-								content: "Unknown class " + options.get("class")?.toUpperCase(),
+								content: "Unknown class " + options.get("class"),
 								flags: InteractionResponseFlags.EPHEMERAL
 							}
 						});
@@ -106,17 +106,17 @@ export default {
 					const batch: D1PreparedStatement[] = [];
 					for(var i = 1;i <= 3;i++){
 						if(options.has("section" + i)){
-							if(!classes[options.get("class")?.toUpperCase() as string].sections.includes(options.get("section" + i)?.toUpperCase() as string)){
+							if(!classes[options.get("class") as string].sections.includes(options.get("section" + i) as string)){
 								return new JsonResponse({
 									type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 									data: {
-										content: "Unknown section " + options.get("section" + i)?.toUpperCase(),
+										content: "Unknown section " + options.get("section" + i),
 										flags: InteractionResponseFlags.EPHEMERAL
 									}
 								});
 							}
 
-							batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId)\nVALUES (?, ?, ?)").bind(userId, options.get("class")?.toUpperCase(), options.get("section" + i)?.toUpperCase()))
+							batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId)\nVALUES (?, ?, ?)").bind(userId, options.get("class"), options.get("section" + i)))
 						}
 					}
 
@@ -134,13 +134,13 @@ export default {
 						const batch: D1PreparedStatement[] = [];
 						for(var i = 1;i <= 3;i++){
 							if(options.has("section" + i)){
-								batch.push(env.DB.prepare("DELETE FROM classes WHERE userId = ? AND classId = ? AND sectionId = ?").bind(userId, options.get("class")?.toUpperCase(), options.get("section" + i)?.toUpperCase()))
+								batch.push(env.DB.prepare("DELETE FROM classes WHERE userId = ? AND classId = ? AND sectionId = ?").bind(userId, options.get("class"), options.get("section" + i)))
 							}
 						}
 
 						await env.DB.batch(batch);
 					}else{
-						await env.DB.prepare("DELETE FROM classes WHERE userId = ? AND classId = ?").bind(userId, options.get("class")?.toUpperCase()).run();
+						await env.DB.prepare("DELETE FROM classes WHERE userId = ? AND classId = ?").bind(userId, options.get("class")).run();
 					}
 
 					return new JsonResponse({
@@ -153,9 +153,9 @@ export default {
 				case "class":
 					var users;
 					if(options.has("section")){
-						users = await env.DB.prepare("SELECT userId FROM classes WHERE classId = ? AND sectionId = ?").bind(options.get("class")?.toUpperCase(), options.get("section")?.toUpperCase()).all();
+						users = await env.DB.prepare("SELECT userId FROM classes WHERE classId = ? AND sectionId = ?").bind(options.get("class"), options.get("section")).all();
 					}else{
-						users = await env.DB.prepare("SELECT userId, sectionId FROM classes WHERE classId = ?").bind(options.get("class")?.toUpperCase()).all();
+						users = await env.DB.prepare("SELECT userId, sectionId FROM classes WHERE classId = ?").bind(options.get("class")).all();
 					}
 
 					if(users.results.length === 0){
@@ -179,7 +179,7 @@ export default {
 					return new JsonResponse({
 						type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 						data: {
-							content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + "people are" : "1 person is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (options.get("section") ? "" : " (" + value[1].map(sectionId => options.get("class")?.toUpperCase() + "-" + sectionId).join(", ") + ")")).join(""),
+							content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + "people are" : "1 person is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (options.get("section") ? "" : " (" + value[1].map(sectionId => options.get("class") + "-" + sectionId).join(", ") + ")")).join(""),
 							allowed_mentions: {
 								users: Object.keys(userIds)
 							},
@@ -239,7 +239,14 @@ function parseOptions(options: {
 }[] = []): Map<string, string>{
 	const optionMap = new Map<string, string>();
 	options.forEach(option => {
-		optionMap.set(option.name, option.value);
+		var value = option.value;
+		if(option.name === "class" || option.name.startsWith("section")){
+			value = value.toUpperCase();
+		}
+		if(option.name === "class"){
+			value = value.replace(" ", "");
+		}
+		optionMap.set(option.name, value);
 	});
 	return optionMap;
 }

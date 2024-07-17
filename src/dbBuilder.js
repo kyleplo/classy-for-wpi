@@ -21,7 +21,11 @@ parseString(await fetch("https://planner.wpi.edu/new.schedb").then(r => r.text()
 
       course.section.forEach(section => {
         section.$.number.split("/").forEach(section => {
-          thisClass.sections.push(section);
+          const sectionId = section.split(" - ")[0];
+          
+          if(!thisClass.sections.includes(sectionId)){
+            thisClass.sections.push(sectionId);
+          }
         });
       });
       classes[dept.$.abbrev + course.$.number] = thisClass;

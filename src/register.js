@@ -31,6 +31,7 @@ const response = await fetch(url, {
   method: 'PUT',
   body: JSON.stringify([
     {
+      type: 1,// Slash command
       name: "schedule",
       description: "Show all registered classes for a specified user",
       options: [{
@@ -41,6 +42,7 @@ const response = await fetch(url, {
       }],
     },
     {
+      type: 1,// Slash command
       name: "addclass",
       description: "Add yourself to a class or sections of a class",
       options: [{
@@ -69,6 +71,7 @@ const response = await fetch(url, {
       }],
     },
     {
+      type: 1,// Slash command
       name: "removeclass",
       description: "Remove yourself from a class or sections of a class",
       options: [{
@@ -97,6 +100,7 @@ const response = await fetch(url, {
       }],
     },
     {
+      type: 1,// Slash command
       name: "class",
       description: "Show all users registered in a class or section",
       options: [{
@@ -113,6 +117,7 @@ const response = await fetch(url, {
       }],
     },
     {
+      type: 1,// Slash command
       name: "mutuals",
       description: "Show all classes you have in common with a specified user",
       options: [{
@@ -121,6 +126,14 @@ const response = await fetch(url, {
         description: "User to get classes for",
         required: true
       }],
+    },
+    {
+      type: 2,// User context menu
+      name: "Schedule"
+    },
+    {
+      type: 2,// User context menu
+      name: "Mutual Classes"
     }
   ]),
 });
