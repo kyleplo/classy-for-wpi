@@ -187,6 +187,7 @@ export default {
 						}
 					});
 				case "mutuals":
+				case "Mutual Classes":
 					const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ?")
 					const allSections = await env.DB.batch([
 						getUserSections.bind(userId),
