@@ -128,6 +128,11 @@ const response = await fetch(url, {
       }],
     },
     {
+      type: 1,// Slash command,
+      name: "import",
+      description: "Show instructions for importing your courses from Workday"
+    },
+    {
       type: 2,// User context menu
       name: "Schedule"
     },

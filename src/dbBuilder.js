@@ -1,5 +1,5 @@
 import { parseString } from "xml2js";
-import { writeFile } from "fs";
+import { readFileSync, writeFile } from "fs";
 
 const classes = {};
 
@@ -33,4 +33,6 @@ parseString(await fetch("https://planner.wpi.edu/new.schedb").then(r => r.text()
   });
 
   writeFile("./src/db.ts", "export const classes: {[classId: string]: {name: string, sections: string[]}} = " + JSON.stringify(classes), () => {});
+
+  writeFile("./node_modules/node-xlsx/dist/chunk-ID6OMQGT.js", readFileSync("./node_modules/node-xlsx/dist/chunk-ID6OMQGT.js", () => {}).toString().replace('import * as fs from "fs";', "const fs = {};"), () => {});
 });

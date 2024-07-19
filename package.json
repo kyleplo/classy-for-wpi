@@ -8,7 +8,8 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "build": "wrangler types && node src/dbBuilder.js && node src/register.js"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.4.5",
@@ -20,6 +21,7 @@
     "xml2js": "^0.6.2"
   },
   "dependencies": {
-    "discord-interactions": "^4.0.0"
+    "discord-interactions": "^4.0.0",
+    "node-xlsx": "0.24.0"
   }
 }

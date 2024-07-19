@@ -1,5 +1,6 @@
 import { verifyKey, InteractionType, InteractionResponseType, InteractionResponseFlags } from "discord-interactions";
 import { classes } from "./db";
+import { parse } from "node-xlsx";
 
 class JsonResponse extends Response {
   constructor(body: object, init?: ResponseInit) {
@@ -36,8 +37,82 @@ async function verifyDiscordRequest(request: Request, env: Env): Promise<{
   return { interaction: JSON.parse(body), isValid: true };
 }
 
+// definitely very cryptographically secure
+function lazyEncrypt(input: string): string {
+	return input.split("").map((char: string, i: number) => {
+		return String.fromCharCode(char.charCodeAt(0) + 49 + i);
+	}).join("");
+}
+
+function lazyDecrypt(input: string): string {
+	return input.split("").map((char: string, i: number) => {
+		return String.fromCharCode(char.charCodeAt(0) - 49 - i);
+	}).join("");
+}
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+		const url = new URL(request.url);
+		if(url.pathname === "/upload"){
+			if(request.method === "POST"){
+				const body = await request.formData();
+
+				if(!body || !body.get("classes") || !body.get("key") || (body.get("classes") as File).size > 10000){
+					return new Response(`<p>Failed to read uploaded file.</p><form method='post' action='/upload' enctype='multipart/form-data'><input type='file' accept='application/vnd.ms-excel,.xlsx' name='classes'><input type='hidden' name='key' value='${url.searchParams.get("key")}'><input type='submit'></form>`, {
+						headers: {
+							'content-type': 'text/html'
+						}
+					});
+				}
+
+				const sheet = parse(await (body.get("classes") as File).arrayBuffer());
+
+				if(sheet.length !== 1 || sheet[0].name !== "View My Courses" || sheet[0].data[0][0] !== "My Enrolled Courses"){
+					return new Response(`<p>Failed to read uploaded file.</p><form method='post' action='/upload' enctype='multipart/form-data'><input type='file' accept='application/vnd.ms-excel,.xlsx' name='classes'><input type='hidden' name='key' value='${body.get("key")}'><input type='submit'></form>`, {
+						headers: {
+							'content-type': 'text/html'
+						}
+					});
+				}
+
+				const batch: D1PreparedStatement[] = [];
+
+				sheet[0].data.forEach(row => {
+					if(row[8] === "Registered" && row[4]){
+						const section = row[4].replace(" ", "").split(" ")[0].split("-");
+
+						if(!classes[section[0]] || !classes[section[0]].sections.includes(section[1])){
+							return;
+						}
+
+						batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId)\nVALUES (?, ?, ?)").bind(lazyDecrypt(body.get("key") as string), section[0], section[1]))
+					}
+				});
+
+				if(batch.length){
+					await env.DB.batch(batch);
+					
+					return new Response(`<p>Successfully uploaded ${batch.length} class sections. You may now close this tab.</p>`, {
+						headers: {
+							'content-type': 'text/html'
+						}
+					});
+				}else{
+					return new Response(`<p>File did not contain any valid classes.</p><form method='post' action='/upload' enctype='multipart/form-data'><input type='file' accept='application/vnd.ms-excel,.xlsx' name='classes'><input type='hidden' name='key' value='${body.get("key")}'><input type='submit'></form>`, {
+						headers: {
+							'content-type': 'text/html'
+						}
+					});
+				}
+			}else{
+				return new Response(`<form method='post' action='/upload' enctype='multipart/form-data'><input type='file' accept='application/vnd.ms-excel,.xlsx' name='classes'><input type='hidden' name='key' value='${url.searchParams.get("key")}'><input type='submit'></form>`, {
+					headers: {
+						'content-type': 'text/html'
+					}
+				});
+			}
+		}
+
 		const { isValid, interaction } = await verifyDiscordRequest(
 			request,
 			env,
@@ -66,11 +141,11 @@ export default {
 						return new JsonResponse({
 							type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 							data: {
-								content: (options.has("user") ? "<@" + options.get("user") + "> is" : "You are") + " not registered for any classes.",
+								content: (options.has("user") ? "<@" + options.get("user") + "> is" : "You are") + " not registered for any classes." + (options.has("user") ? "" : "\nYou can add classes with the `addclass` command or import them from Workday with the `import` command."),
 								allowed_mentions: {
 									users: options.has("user") ? [options.get("user")] : []
 								},
-								flags: 4096
+								flags: InteractionResponseFlags.EPHEMERAL
 							}
 						});
 					}
@@ -82,7 +157,7 @@ export default {
 							allowed_mentions: {
 								users: options.has("user") ? [options.get("user")] : []
 							},
-							flags: 4096
+							flags: InteractionResponseFlags.EPHEMERAL
 						}
 					});
 				case "addclass":
@@ -172,11 +247,11 @@ export default {
 					return new JsonResponse({
 						type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 						data: {
-							content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + "people are" : "1 person is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (options.get("section") ? "" : " (" + value[1].map(sectionId => options.get("class") + "-" + sectionId).join(", ") + ")")).join(""),
+							content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + " people are" : "1 person is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (options.get("section") ? "" : " (" + value[1].map(sectionId => options.get("class") + "-" + sectionId).join(", ") + ")")).join(""),
 							allowed_mentions: {
 								users: Object.keys(userIds)
 							},
-							flags: 4096
+							flags: InteractionResponseFlags.EPHEMERAL
 						}
 					});
 				case "mutuals":
@@ -203,7 +278,7 @@ export default {
 								allowed_mentions: {
 									users: [options.get("user")]
 								},
-								flags: 4096
+								flags: InteractionResponseFlags.EPHEMERAL
 							}
 						});
 					}
@@ -215,7 +290,15 @@ export default {
 							allowed_mentions: {
 								users: [options.get("user")]
 							},
-							flags: 4096
+							flags: InteractionResponseFlags.EPHEMERAL
+						}
+					});
+				case "import":
+					return new JsonResponse({
+						type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+						data: {
+							content: `In Workday, open your course list and download your courses as an Excel spreadsheet. Then use [this page](https://classy.kyleplo.workers.dev/upload?key=${lazyEncrypt(userId)}) to upload the Excel spreadsheet you just downloaded.`,
+							flags: InteractionResponseFlags.EPHEMERAL
 						}
 					});
 				default:
