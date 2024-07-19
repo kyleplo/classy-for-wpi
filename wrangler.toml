@@ -4,6 +4,11 @@ main = "src/index.ts"
 compatibility_date = "2024-07-12"
 compatibility_flags = ["nodejs_compat"]
 
+[vars]
+BOT_NAME = "Classy for WPI"
+BOT_LINK = "https://classy.kyleplo.workers.dev"
+BOT_THEME_COLOR = "#ac2b37"
+
 [[d1_databases]]
 binding = "DB" # available in your Worker on env.DB
 database_name = "classy"

@@ -13,7 +13,7 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		if(url.pathname === "/upload"){
-			return await handleImport(request, env, url.searchParams.get("key") as string);
+			return await handleImport(request, env, decodeURIComponent(url.searchParams.get("key") as string));
 		}
 
 		const { isValid, interaction } = await verifyDiscordRequest(

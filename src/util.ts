@@ -26,19 +26,6 @@ export async function verifyDiscordRequest(request: Request, env: Env): Promise<
   return { interaction: JSON.parse(body), isValid: true };
 }
 
-// definitely very cryptographically secure
-export function lazyEncrypt(input: string): string {
-	return input.split("").map((char: string, i: number) => {
-		return String.fromCharCode(char.charCodeAt(0) + 49 + i);
-	}).join("");
-}
-
-export function lazyDecrypt(input: string): string {
-	return input.split("").map((char: string, i: number) => {
-		return String.fromCharCode(char.charCodeAt(0) - 49 - i);
-	}).join("");
-}
-
 export function parseOptions(options: {
 	name: string,
 	value: string
@@ -98,7 +85,7 @@ export class JsonResponse extends Response {
 }
 
 export class HtmlResponse extends Response {
-  constructor(body: string, init?: ResponseInit) {
+  constructor(env: Env, body: string, init?: ResponseInit) {
     if(!init){
 			init = {}
 		}
@@ -109,6 +96,53 @@ export class HtmlResponse extends Response {
 			// @ts-ignore
 			init.headers['content-type'] = "text/html;charset=UTF-8"
 		}
-    super(body, init);
+    super(`
+			<!DOCTYPE html>
+			<html>
+				<head>
+					<meta charset="utf-8">
+					<meta http-equiv="X-UA-Compatible" content="IE=edge">
+					<meta name="viewport" content="width=device-width, initial-scale=1">
+					<title>${env.BOT_NAME}</title>
+					<meta name="description" content="Import your course list from Workday into ${env.BOT_NAME}">
+					<meta name="theme-color" content="${env.BOT_THEME_COLOR}">
+				</head>
+				<style>
+					html {
+						--theme-color: ${env.BOT_THEME_COLOR};
+						border-top: solid 15px var(--theme-color);
+					}
+
+					body {
+						font-family: sans-serif;
+					}
+
+					h1 {
+						color: var(--theme-color);
+					}
+
+					body {
+						margin: 10vh 10%;
+						text-align: center;
+					}
+
+					input[type="submit"], input::file-selector-button {
+						background-color: var(--theme-color);
+						color: white;
+						border: none;
+						padding: 10px;
+						cursor: pointer;
+					}
+
+					input[type="submit"]:hover, input::file-selector-button:hover {
+						opacity: 0.5;
+					}
+				</style>
+				<body>
+					<h1>${env.BOT_NAME}</h1>
+					${body}
+				</body>
+			</html>
+		`, init);
   }
 }
