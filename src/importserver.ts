@@ -39,7 +39,14 @@ export async function handleImport(request: Request, env: Env, key: string): Pro
     }
 
     const batch: D1PreparedStatement[] = [];
-    const userId = await decrypt(env, body.get("key") as string);
+    var userId: string;
+    try {
+      userId = await decrypt(env, body.get("key") as string);
+    } catch {
+      return new HtmlResponse(env, `
+        <p>Invalid link, use the <code>/import</code> command to get a new one.</p>
+      `);
+    }
 
     sheet[0].data.forEach(row => {
       if(row[8] === "Registered" && row[4]){
