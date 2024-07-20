@@ -6,7 +6,7 @@ export async function encrypt(env: Env, str: string): Promise<string> {
   const encoder = new TextEncoder();
   const buffer = await crypto.subtle.encrypt({
     name: "RSA-OAEP"
-  }, publicKey, encoder.encode(str.match(/.{1,3}/g)?.map(s => parseInt(s).toString(32)).join("")));
+  }, publicKey, encoder.encode(str));
   return btoa(Array.from(new Uint8Array(buffer)).map(b => String.fromCharCode(b)).join(''))
 }
 
@@ -18,6 +18,6 @@ export async function decrypt(env: Env, str: string): Promise<string> {
   const decoder = new TextDecoder();
   const buffer = await crypto.subtle.decrypt({
     name: "RSA-OAEP"
-  }, privateKey, Uint8Array.from(atob(str.match(/.{1,2}/g)?.map(s => parseInt(s, 32).toString().padStart(3, "0")).join("") as string), c => c.charCodeAt(0)));
+  }, privateKey, Uint8Array.from(atob(str), c => c.charCodeAt(0)));
   return decoder.decode(buffer);
 }
