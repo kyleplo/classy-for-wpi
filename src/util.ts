@@ -146,3 +146,38 @@ export class HtmlResponse extends Response {
 		`, init);
   }
 }
+
+// adapted from https://github.com/peernohell/worker-imageholder/
+export class Writer extends EventTarget {
+	writer: WritableStream;
+	defaultWriter: WritableStreamDefaultWriter
+
+  constructor(writer: WritableStream) {
+    super();
+    this.writer = writer;
+		this.defaultWriter = writer.getWriter();
+  }
+
+  emit(event: string, data: any) {
+    this.dispatchEvent(new Event(event));
+
+    // TODO only on pipe
+    if (event === 'pipe') {
+      data.on('data', this.onData.bind(this));
+      data.on('end', this.onEnd.bind(this));
+    }
+  }
+
+  async onData(chunk: any) {
+		await this.defaultWriter.ready;
+    this.defaultWriter.write(chunk);
+  }
+  async onEnd() {
+    this.emit('finish', null);
+		await this.defaultWriter.ready;
+		await this.defaultWriter.close();
+  }
+  end() { /* needed but writer.close must be called later. */ }
+  on(evt: string, cb: EventListenerOrEventListenerObject) { this.addEventListener(evt, cb); return this; }
+  removeListener(evt: string, cb: EventListenerOrEventListenerObject) { this.removeEventListener(evt, cb); }
+}

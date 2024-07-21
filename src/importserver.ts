@@ -52,7 +52,7 @@ export async function handleImport(request: Request, env: Env, key: string): Pro
       if(row[8] === "Registered" && row[4]){
         const section = row[4].replace(" ", "").split(" ")[0].split("-");
 
-        if(!classes[section[0]] || !classes[section[0]].sections.includes(section[1])){
+        if(!classes[section[0]] || !classes[section[0]].sections[section[1]]){
           return;
         }
 

@@ -1,7 +1,7 @@
 import { InteractionType, InteractionResponseType } from "discord-interactions";
 import { JsonResponse, verifyDiscordRequest, parseOptions } from "./util";
 
-import { scheduleCommand } from "./commands/schedule";
+import { generateScheduleResponse, scheduleCommand } from "./commands/schedule";
 import { addClassCommand } from "./commands/addclass";
 import { removeClassCommand } from "./commands/removeclass";
 import { classCommand } from "./commands/class";
@@ -14,6 +14,8 @@ export default {
 		const url = new URL(request.url);
 		if(url.pathname === "/upload"){
 			return await handleImport(request, env, decodeURIComponent(url.searchParams.get("key") as string));
+		}else if(url.pathname === "/schedule"){
+			return generateScheduleResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"))
 		}
 
 		const { isValid, interaction } = await verifyDiscordRequest(

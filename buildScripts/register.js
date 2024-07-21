@@ -33,11 +33,24 @@ const response = await fetch(url, {
     {
       type: 1,// Slash command
       name: "schedule",
-      description: "Show all registered classes for a specified user",
-      options: [{
+      description: "Generate a visual schedule for a user",
+      options: [
+        {
+          type: 3,// STRING,
+          name: "term",
+          description: "Term to generate a schedule for",
+          required: true,
+          choices: [
+            {name: "A term", value: "A"},
+            {name: "B term", value: "B"},
+            {name: "C term", value: "C"},
+            {name: "D term", value: "D"}
+          ]
+        },
+        {
         type: 6,// USER
         name: "user",
-        description: "User to get classes for (defaults to yourself)",
+        description: "User to make a schedule for (defaults to yourself)",
         required: false
       }],
     },
@@ -125,6 +138,19 @@ const response = await fetch(url, {
         name: "user",
         description: "User to get classes for",
         required: true
+      },
+      {
+        type: 3,// STRING,
+        name: "term",
+        description: "Term to show classes for (defaults to all terms)",
+        required: false,
+        choices: [
+          {name: "All terms", value: "all"},
+          {name: "A term", value: "A"},
+          {name: "B term", value: "B"},
+          {name: "C term", value: "C"},
+          {name: "D term", value: "D"}
+        ]
       }],
     },
     {

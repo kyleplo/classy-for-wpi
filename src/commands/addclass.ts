@@ -16,7 +16,7 @@ export async function addClassCommand (env: Env, userId: string, options: Map<st
   const batch: D1PreparedStatement[] = [];
   for(var i = 1;i <= 3;i++){
     if(options.has("section" + i)){
-      if(!classes[options.get("class") as string].sections.includes(options.get("section" + i) as string)){
+      if(!classes[options.get("class") as string].sections[options.get("section" + i) as string]){
         return new JsonResponse({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
