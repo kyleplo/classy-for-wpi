@@ -14,40 +14,81 @@ const TermStartEnd = {
 };
 
 export async function calendarCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
-	const term = options.get('term');
-	if (!userId || !term) {
+	return new JsonResponse({
+		type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+		data: {
+			embeds: [
+				{
+					title: `${options.has('userName') ? options.get('userName') + "'s c" : 'C'}alendar for ${options.get('term')} term`,
+					image: {
+						url: `${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}&term=${options.get('term')}&v=${Date.now()}`,
+					},
+				},
+			],
+		},
+	});
+}
+
+export async function generateCalendarResponse(env: Env, userId: string | null, termSelection: string | null, version: string | null) {
+	if (!userId || !termSelection) {
 		return new Response('Bad request.', { status: 400 });
 	}
-	const sections = await env.DB.prepare('SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?')
-		.bind(userId, term)
-		.all<ClassRow>();
 
+	const cachedCalendar = await caches.default.match(`${env.BOT_LINK}/calendar?userId=${userId}&term=${term}&v=${version}`);
+	if (cachedCalendar) {
+		return cachedCalendar;
+	}
+
+	let terms = []
+    if (termSelection == "ALL"){
+        terms = ["A", "B", "C", "D"]
+    } else {
+        terms = [termSelection]
+    }
 	const calendar = ical({ name: `{term} term schedule` });
 
 	calendar.method(ICalCalendarMethod.REQUEST);
+	terms.forEach(term => {
+	    const sections = await env.DB.prepare('SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?')
+		    .bind(userId, term)
+		    .all<ClassRow>();
 
-	sections.forEach((value) => {
-		const section = classes[value.classId].sections[value.sectionId];
 
-		const [startDate, endDate] = TermStartEnd[term];
+	    sections.forEach((value) => {
+		    const section = classes[value.classId].sections[value.sectionId];
 
-		let startTime = startDate;
-		let endTime = startDate;
-		startTime.setHours(Math.floor(section.starts / 100), section.starts % 100);
-		endTime.setHours(Math.floor(section.ends / 100), section.starts % 100);
-		calendar.createEvent({
-			start: startTime,
-			end: endTime,
-			description: `{classes[value.classId].name}\n{section.type}`,
-			summary: `{value.classId}-{value.sectionId}`,
-			location: section.room,
-			repeating: {
-				freq: 'WEEKLY',
-				until: endDate,
-			},
-			byDay: section.days.map((day) => DateMap[day]),
-		});
+		    const [startDate, endDate] = TermStartEnd[term];
+
+		    let startTime = startDate;
+		    let endTime = startDate;
+		    startTime.setHours(Math.floor(section.starts / 100), section.starts % 100);
+		    endTime.setHours(Math.floor(section.ends / 100), section.starts % 100);
+		    calendar.createEvent({
+			    start: startTime,
+			    end: endTime,
+			    description: `${classes[value.classId].name}\n${section.type}`,
+			    summary: `${value.classId}-${value.sectionId}`,
+			    location: section.room,
+			    repeating: {
+				    freq: 'WEEKLY',
+				    until: endDate,
+			    },
+			    byDay: section.days.map((day) => DateMap[day]),
+		    });
+	    });
 	});
 
-	return new Response(calendar.toString(), { headers: { 'content-type': 'text/calendar' } });
+	const scheduleCalendar = new Response(calendar.toString(), {
+		headers: {
+			'content-type': 'text/calendar',
+			'cache-control': 'public, max-age=86400, immutable',
+		},
+	});
+
+	if (version) {
+		caches.default.put(`${env.BOT_LINK}/calendar?userId=${userId}&term=${term}&v=${version}`, scheduleCalendar.clone());
+	}
+
+	scheduleCalendar.headers.append('last-modified', new Date().toUTCString());
+	return scheduleCalendar;
 }
