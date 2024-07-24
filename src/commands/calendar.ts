@@ -20,9 +20,7 @@ export async function calendarCommand(env: Env, userId: string, options: Map<str
 			embeds: [
 				{
 					title: `${options.has('userName') ? options.get('userName') + "'s c" : 'C'}alendar for ${options.get('term')} term`,
-					image: {
-						url: `${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}&term=${options.get('term')}&v=${Date.now()}`,
-					},
+					url: `${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}&term=${options.get('term')}&v=${Date.now()}`,
 				},
 			],
 		},
