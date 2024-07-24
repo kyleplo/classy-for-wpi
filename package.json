@@ -1,28 +1,30 @@
 {
-  "name": "classy",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "test": "vitest",
-    "cf-typegen": "wrangler types",
-    "build": "wrangler types && node buildScripts/dbBuilder.js && node buildScripts/workersPatch.js && node buildScripts/register.js"
-  },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.4.5",
-    "@cloudflare/workers-types": "^4.20240712.0",
-    "dotenv": "^16.4.5",
-    "typescript": "^5.5.2",
-    "vitest": "1.5.0",
-    "wrangler": "^3.60.3",
-    "xml2js": "^0.6.2"
-  },
-  "dependencies": {
-    "discord-interactions": "^4.0.0",
-    "node-xlsx": "0.24.0",
-    "pureimage": "0.4.13"
-  }
+	"name": "classy",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"build": "wrangler types && node buildScripts/dbBuilder.js && node buildScripts/workersPatch.js && node buildScripts/register.js",
+		"format": "prettier . --write"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.4.5",
+		"@cloudflare/workers-types": "^4.20240712.0",
+		"dotenv": "^16.4.5",
+		"typescript": "^5.5.2",
+		"vitest": "1.5.0",
+		"wrangler": "^3.60.3",
+		"xml2js": "^0.6.2"
+	},
+	"dependencies": {
+		"discord-interactions": "^4.0.0",
+		"ical-generator": "^7.1.0",
+		"node-xlsx": "0.24.0",
+		"pureimage": "0.4.13"
+	}
 }
