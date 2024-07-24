@@ -1,19 +1,20 @@
 import { InteractionResponseFlags, InteractionResponseType } from "discord-interactions";
 import { ClassRow, JsonResponse, organizeClassList } from "../util";
+import { terms } from "../db";
 
 export async function mutualsCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
   var allSections;
-  if(!options.has("term") || options.get("term") === "ALL"){
+  if(!options.has("term")){
     const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ?");
     allSections = await env.DB.batch<ClassRow>([
       getUserSections.bind(userId),
       getUserSections.bind(options.get("user"))
     ]);
   }else{
-    const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?");
+    const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND (term = ? OR term = ?)");
     allSections = await env.DB.batch<ClassRow>([
-      getUserSections.bind(userId, options.get("term")),
-      getUserSections.bind(options.get("user"), options.get("term"))
+      getUserSections.bind(userId, options.get("term"), terms[options.get("term") as string].partOf),
+      getUserSections.bind(options.get("user"), options.get("term"), terms[options.get("term") as string].partOf)
     ]);
   }
 

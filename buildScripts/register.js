@@ -38,13 +38,15 @@ const response = await fetch(url, {
         {
           type: 3,// STRING,
           name: "term",
-          description: "Term to generate a schedule for",
-          required: true,
+          description: "Term to generate a schedule for (defaults to current term)",
+          required: false,
           choices: [
             {name: "A term", value: "A"},
             {name: "B term", value: "B"},
             {name: "C term", value: "C"},
-            {name: "D term", value: "D"}
+            {name: "D term", value: "D"},
+            {name: "E1 term", value: "E1"},
+            {name: "E2 term", value: "E2"},
           ]
         },
         {
@@ -145,11 +147,12 @@ const response = await fetch(url, {
         description: "Term to show classes for (defaults to all terms)",
         required: false,
         choices: [
-          {name: "All terms", value: "all"},
           {name: "A term", value: "A"},
           {name: "B term", value: "B"},
           {name: "C term", value: "C"},
-          {name: "D term", value: "D"}
+          {name: "D term", value: "D"},
+          {name: "E1 term", value: "E1"},
+          {name: "E2 term", value: "E2"},
         ]
       }],
     },
@@ -164,10 +167,10 @@ const response = await fetch(url, {
         required: false
       }]
     },
-    /*{ // Disabled due to changes to schedule generator
+    {
       type: 2,// User context menu
       name: "Schedule"
-    },*/
+    },
     {
       type: 2,// User context menu
       name: "Mutual Classes"

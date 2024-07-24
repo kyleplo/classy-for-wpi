@@ -26,7 +26,7 @@ export async function addClassCommand (env: Env, userId: string, options: Map<st
         });
       }
 
-      batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId)\nVALUES (?, ?, ?)").bind(userId, options.get("class"), options.get("section" + i)))
+      batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, options.get("class"), options.get("section" + i), classes[options.get("class") as string].sections[options.get("section" + i) as string].term))
     }
   }
 

@@ -1,16 +1,18 @@
 import { InteractionResponseType } from "discord-interactions";
-import { ClassRow, Writer, JsonResponse } from "../util";
+import { ClassRow, Writer, JsonResponse, currentTerm } from "../util";
 import { make, encodePNGToStream, registerFont, Context, Bitmap } from "pureimage/dist/index.js";
-import { classes } from "../db";
+import { classes, terms } from "../db";
 
 export async function scheduleCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
+  const term = options.get("term") || currentTerm();
+
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [{
-        title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${options.get("term")} term`,
+        title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${term} term`,
         image: {
-          url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${options.get("term")}&v=${Date.now()}`
+          url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${term}&v=${Date.now()}`
         }
       }]
     }
@@ -27,7 +29,7 @@ export async function generateScheduleResponse(env: Env, userId: string | null, 
     return cachedImage;
   }
 
-  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?").bind(userId, term).all<ClassRow>();
+  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND (term = ? OR term = ?)").bind(userId, term, terms[term].partOf).all<ClassRow>();
 
   const scheduleImage = new Response(await generateScheduleImage(term, sections.results), {
     headers: {
@@ -74,6 +76,10 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
 
   schedule.forEach(value => {
     const section = classes[value.classId].sections[value.sectionId];
+
+    if(!section.starts || !section.ends){
+      return;
+    }
     
     if(section.starts < earliest){
       earliest = section.starts;
@@ -119,7 +125,15 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
   schedule.forEach(value => {
     const section = classes[value.classId.toUpperCase()].sections[value.sectionId.toUpperCase()];
 
+    if(!section.days){
+      return;
+    }
+
     section.days.forEach(day => {
+      if(!section.starts || !section.ends || !section.room){
+        return;
+      }
+
       const sectionX = 55 + day * 150;
       const sectionY = pxPerMin * (section.starts - earliest) + 30;
       const sectionHeight = pxPerMin * (section.ends - section.starts);

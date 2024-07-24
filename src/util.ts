@@ -1,5 +1,5 @@
 import { verifyKey } from "discord-interactions";
-import { classes } from "./db";
+import { classes, terms } from "./db";
 
 export type ClassRow = {
 	RowID: number,
@@ -128,4 +128,15 @@ export class Writer extends EventTarget {
   end() { /* needed but writer.close must be called later. */ }
   on(evt: string, cb: EventListenerOrEventListenerObject) { this.addEventListener(evt, cb); return this; }
   removeListener(evt: string, cb: EventListenerOrEventListenerObject) { this.removeEventListener(evt, cb); }
+}
+
+export function currentTerm(): string{
+	const termOrder = ["D", "E1", "E2", "A", "B"];
+	var currentTerm = "C";
+	termOrder.forEach(term => {
+		if(Date.now() >= terms[term].starts){
+			currentTerm = term;
+		}
+	});
+	return currentTerm;
 }

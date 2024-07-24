@@ -49,7 +49,7 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
         if(!classes[section[0]] || !classes[section[0]].sections[section[1]]){
           return;
         }
-        batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId)\nVALUES (?, ?, ?)").bind(userId, section[0], section[1]))
+        batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, section[0], section[1], classes[section[0]].sections[section[1]].term))
       }
     });
 
