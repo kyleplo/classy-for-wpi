@@ -58,6 +58,26 @@ const response = await fetch(url, {
     },
     {
       type: 1,// Slash command
+      name: "calendar",
+      description: "Generates an iCal / ICS file of your schedule",
+      options: [
+        {
+          type: 3,// STRING,
+          name: "term",
+          description: "Term to generate a calendar for",
+          required: true,
+          choices: [
+            {name: "A term", value: "A"},
+            {name: "B term", value: "B"},
+            {name: "C term", value: "C"},
+            {name: "D term", value: "D"}
+            {name: "All term", value: "ALL"}
+          ]
+        }
+        ],
+    },
+    {
+      type: 1,// Slash command
       name: "addclass",
       description: "Add yourself to a class or sections of a class",
       options: [{
