@@ -10,10 +10,10 @@ export async function mutualsCommand(env: Env, userId: string, options: Map<stri
       getUserSections.bind(options.get("user"))
     ]);
   }else{
-    const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND sectionId LIKE ?");
+    const getUserSections = env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?");
     allSections = await env.DB.batch<ClassRow>([
-      getUserSections.bind(userId, options.get("term") + "%"),
-      getUserSections.bind(options.get("user"), options.get("term") + "%")
+      getUserSections.bind(userId, options.get("term")),
+      getUserSections.bind(options.get("user"), options.get("term"))
     ]);
   }
 

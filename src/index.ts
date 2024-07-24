@@ -8,12 +8,17 @@ import { classCommand } from "./commands/class";
 import { mutualsCommand } from "./commands/mutuals";
 import { importCommand } from "./commands/import";
 
+//import { migrateTermColumn } from "./migrateTermColumn";
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		if(url.pathname === "/schedule"){
 			return generateScheduleResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"), url.searchParams.get("v"))
-		}
+		}/*else if(url.pathname === "/migrate"){
+			await migrateTermColumn(env);
+			return new Response();
+		}*/
 
 		const { isValid, interaction } = await verifyDiscordRequest(
 			request,

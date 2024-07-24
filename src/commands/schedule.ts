@@ -27,7 +27,7 @@ export async function generateScheduleResponse(env: Env, userId: string | null, 
     return cachedImage;
   }
 
-  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND sectionId LIKE ?").bind(userId, term + "%").all<ClassRow>();
+  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?").bind(userId, term).all<ClassRow>();
 
   const scheduleImage = new Response(await generateScheduleImage(term, sections.results), {
     headers: {
@@ -40,6 +40,7 @@ export async function generateScheduleResponse(env: Env, userId: string | null, 
     caches.default.put(`${env.BOT_LINK}/schedule?userId=${userId}&term=${term}&v=${version}`, scheduleImage.clone());
   }
 
+  scheduleImage.headers.append("last-modified", new Date().toUTCString());
   return scheduleImage;
 }
 
