@@ -2,11 +2,7 @@
 // by running `wrangler types`
 
 interface Env {
-	BOT_NAME: "Classy for WPI";
-	BOT_LINK: "https://classy.kyleplo.workers.dev";
-	BOT_THEME_COLOR: "#ac2b37";
-	IMPORT_PUBLIC_KEY: string,
-	IMPORT_PRIVATE_KEY: string,
+	BOT_LINK: "https://classywpi.kyleplo.com";
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_APPLICATION_ID: string;
 	DISCORD_TOKEN: string;

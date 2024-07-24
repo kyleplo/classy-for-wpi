@@ -7,15 +7,12 @@ import { removeClassCommand } from "./commands/removeclass";
 import { classCommand } from "./commands/class";
 import { mutualsCommand } from "./commands/mutuals";
 import { importCommand } from "./commands/import";
-import { handleImport } from "./importserver";
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
-		if(url.pathname === "/upload"){
-			return await handleImport(request, env, decodeURIComponent(url.searchParams.get("key") as string));
-		}else if(url.pathname === "/schedule"){
-			return generateScheduleResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"))
+		if(url.pathname === "/schedule"){
+			return generateScheduleResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"), url.searchParams.get("v"))
 		}
 
 		const { isValid, interaction } = await verifyDiscordRequest(
@@ -34,7 +31,7 @@ export default {
 
 		if(interaction.type === InteractionType.APPLICATION_COMMAND){
 			const userId = interaction?.member?.user?.id || interaction?.user?.id;
-			const options = (interaction.data.type === 1/* slash command */) ? parseOptions(interaction.data.options) : (new Map().set("user", interaction.data["target_id"]));
+			const options = (interaction.data.type === 1/* slash command */) ? parseOptions(interaction) : (new Map().set("user", interaction.data["target_id"]));
 
 			switch (interaction.data.name.toLowerCase()) {
 				case "schedule":

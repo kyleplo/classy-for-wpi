@@ -26,18 +26,26 @@ export async function verifyDiscordRequest(request: Request, env: Env): Promise<
   return { interaction: JSON.parse(body), isValid: true };
 }
 
-export function parseOptions(options: {
-	name: string,
-	value: string
-}[] = []): Map<string, string>{
+export function parseOptions(interaction: any): Map<string, string>{
 	const optionMap = new Map<string, string>();
-	options.forEach(option => {
+	interaction.data.options.forEach((option: {name: string, value: string}) => {
 		var value = option.value;
 		if(option.name === "class" || option.name.startsWith("section")){
 			value = value.toUpperCase();
 		}
 		if(option.name === "class"){
 			value = value.replace(" ", "");
+		}
+		if(option.name === "file"){
+			value = interaction?.data?.resolved?.attachments[value];
+		}
+		if(option.name === "user"){
+			if(interaction?.data?.resolved?.users && interaction?.data?.resolved?.users[value]){
+				optionMap.set("userName", interaction?.data?.resolved?.users[value]?.global_name || interaction?.data?.resolved?.users[value]?.username)
+			}
+			if(interaction?.data?.resolved?.members && interaction?.data?.resolved?.members[value] && interaction?.data?.resolved?.members[value]?.nick){
+				optionMap.set("userName", interaction?.data?.resolved?.members[value]?.nick)
+			}
 		}
 		optionMap.set(option.name, value);
 	});
@@ -81,69 +89,6 @@ export class JsonResponse extends Response {
 			init.headers['content-type'] = "application/json;charset=UTF-8"
 		}
     super(jsonBody, init);
-  }
-}
-
-export class HtmlResponse extends Response {
-  constructor(env: Env, body: string, init?: ResponseInit) {
-    if(!init){
-			init = {}
-		}
-		if(!init.headers){
-			init.headers = {};
-		}
-		if(!('content-type' in init.headers)){
-			// @ts-ignore
-			init.headers['content-type'] = "text/html;charset=UTF-8"
-		}
-    super(`
-			<!DOCTYPE html>
-			<html>
-				<head>
-					<meta charset="utf-8">
-					<meta http-equiv="X-UA-Compatible" content="IE=edge">
-					<meta name="viewport" content="width=device-width, initial-scale=1">
-					<title>${env.BOT_NAME}</title>
-					<meta name="description" content="Import your course list from Workday into ${env.BOT_NAME}">
-					<meta name="theme-color" content="${env.BOT_THEME_COLOR}">
-				</head>
-				<style>
-					html {
-						--theme-color: ${env.BOT_THEME_COLOR};
-						border-top: solid 15px var(--theme-color);
-					}
-
-					body {
-						font-family: sans-serif;
-					}
-
-					h1 {
-						color: var(--theme-color);
-					}
-
-					body {
-						margin: 10vh 10%;
-						text-align: center;
-					}
-
-					input[type="submit"], input::file-selector-button {
-						background-color: var(--theme-color);
-						color: white;
-						border: none;
-						padding: 10px;
-						cursor: pointer;
-					}
-
-					input[type="submit"]:hover, input::file-selector-button:hover {
-						opacity: 0.5;
-					}
-				</style>
-				<body>
-					<h1>${env.BOT_NAME}</h1>
-					${body}
-				</body>
-			</html>
-		`, init);
   }
 }
 

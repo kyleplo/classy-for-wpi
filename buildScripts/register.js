@@ -156,12 +156,18 @@ const response = await fetch(url, {
     {
       type: 1,// Slash command,
       name: "import",
-      description: "Show instructions for importing your courses from Workday"
+      description: "Import your course list from Workday, or show instructions to do so",
+      options: [{
+        type: 11,// ATTACHMENT,
+        name: "file",
+        description: "File from Workday containing your course list",
+        required: false
+      }]
     },
-    {
+    /*{ // Disabled due to changes to schedule generator
       type: 2,// User context menu
       name: "Schedule"
-    },
+    },*/
     {
       type: 2,// User context menu
       name: "Mutual Classes"

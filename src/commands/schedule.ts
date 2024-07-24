@@ -1,5 +1,5 @@
 import { InteractionResponseType } from "discord-interactions";
-import { ClassRow, JsonResponse, Writer } from "../util";
+import { ClassRow, Writer, JsonResponse } from "../util";
 import { make, encodePNGToStream, registerFont, Context, Bitmap } from "pureimage/dist/index.js";
 import { classes } from "../db";
 
@@ -8,12 +8,39 @@ export async function scheduleCommand(env: Env, userId: string, options: Map<str
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [{
+        title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${options.get("term")} term`,
         image: {
-          url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${options.get("term")}`
+          url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${options.get("term")}&v=${Date.now()}`
         }
       }]
     }
   });
+}
+
+export async function generateScheduleResponse(env: Env, userId: string | null, term: string | null, version: string | null) {
+  if(!userId || !term){
+    return new Response('Bad request.', { status: 400 });
+  }
+
+  const cachedImage = await caches.default.match(`${env.BOT_LINK}/schedule?userId=${userId}&term=${term}&v=${version}`);
+  if(cachedImage){
+    return cachedImage;
+  }
+
+  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND sectionId LIKE ?").bind(userId, term + "%").all<ClassRow>();
+
+  const scheduleImage = new Response(await generateScheduleImage(term, sections.results), {
+    headers: {
+      'content-type': 'image/png',
+      'cache-control': 'public, max-age=86400, immutable'
+    }
+  });
+
+  if(version){
+    caches.default.put(`${env.BOT_LINK}/schedule?userId=${userId}&term=${term}&v=${version}`, scheduleImage.clone());
+  }
+
+  return scheduleImage;
 }
 
 const colors = ["rgb(172, 114, 94)", "rgb(250, 87, 60)", "rgb(255, 173, 70)",
@@ -23,20 +50,6 @@ const colors = ["rgb(172, 114, 94)", "rgb(250, 87, 60)", "rgb(255, 173, 70)",
 			"rgb(159, 225, 231)", "rgb(246, 145, 178)", "#92E1C0",
 			"rgb(251, 233, 131)", "#7BD148", "rgb(159, 198, 231)"];
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-export async function generateScheduleResponse(env: Env, userId: string | null, term: string | null) {
-  if(!userId || !term){
-    return new Response('Bad request.', { status: 400 });
-  }
-
-  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND sectionId LIKE ?").bind(userId, term + "%").all<ClassRow>();
-
-  return new Response(await generateScheduleImage(term, sections.results), {
-    headers: {
-      'content-type': 'image/png'
-    }
-  })
-}
 
 function ellipsis(ctx: Context, text: string, width: number): string {
   if(ctx.measureText(text).width <= width){
@@ -52,7 +65,7 @@ function ellipsis(ctx: Context, text: string, width: number): string {
 
 var image: Bitmap, ctx: Context;
 
-export async function generateScheduleImage(term: string, schedule: ClassRow[]): Promise<ReadableStream> {
+async function generateScheduleImage(term: string, schedule: ClassRow[]): Promise<ReadableStream> {
   var earliest = 1290;
   var latest = 360;
   var classColors: {[classId: string]: string} = {};
