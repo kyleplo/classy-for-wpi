@@ -16,7 +16,10 @@ export default {
 		const url = new URL(request.url);
 		if (url.pathname === '/schedule') {
 			return generateScheduleResponse(env, url.searchParams.get('userId'), url.searchParams.get('term'), url.searchParams.get('v'));
-		} /*else if(url.pathname === "/migrate"){
+		} else if (url.pathname === '/calendar') {
+		    return generateCalendarResponse(env, url.searchParams.get('userId'), url.searchParams.get('term'))
+		}
+		/*else if(url.pathname === "/migrate"){
 			await migrateTermColumn(env);
 			return new Response();
 		}*/

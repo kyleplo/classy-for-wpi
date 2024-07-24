@@ -69,6 +69,7 @@ const response = await fetch(url, {
             {name: "B term", value: "B"},
             {name: "C term", value: "C"},
             {name: "D term", value: "D"}
+            {name: "All term", value: "ALL"}
           ]
         }
         ],
