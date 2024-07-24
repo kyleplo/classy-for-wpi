@@ -7,7 +7,7 @@ import { removeClassCommand } from './commands/removeclass';
 import { classCommand } from './commands/class';
 import { mutualsCommand } from './commands/mutuals';
 import { importCommand } from './commands/import';
-import { calendarCommand} from './commands/calendar'
+import { generateCalendarResponse, calendarCommand} from './commands/calendar'
 
 //import { migrateTermColumn } from "./migrateTermColumn";
 
