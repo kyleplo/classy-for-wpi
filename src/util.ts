@@ -28,6 +28,9 @@ export async function verifyDiscordRequest(request: Request, env: Env): Promise<
 
 export function parseOptions(interaction: any): Map<string, string>{
 	const optionMap = new Map<string, string>();
+	if(!interaction?.data?.options){
+		return optionMap;
+	}
 	interaction.data.options.forEach((option: {name: string, value: string}) => {
 		var value = option.value;
 		if(option.name === "class" || option.name.startsWith("section")){
