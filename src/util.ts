@@ -1,5 +1,5 @@
 import { verifyKey } from "discord-interactions";
-import { classes } from "./db";
+import { classes, terms } from "./db";
 
 export type ClassRow = {
 	RowID: number,
@@ -28,6 +28,9 @@ export async function verifyDiscordRequest(request: Request, env: Env): Promise<
 
 export function parseOptions(interaction: any): Map<string, string>{
 	const optionMap = new Map<string, string>();
+	if(!interaction?.data?.options){
+		return optionMap;
+	}
 	interaction.data.options.forEach((option: {name: string, value: string}) => {
 		var value = option.value;
 		if(option.name === "class" || option.name.startsWith("section")){
@@ -125,4 +128,15 @@ export class Writer extends EventTarget {
   end() { /* needed but writer.close must be called later. */ }
   on(evt: string, cb: EventListenerOrEventListenerObject) { this.addEventListener(evt, cb); return this; }
   removeListener(evt: string, cb: EventListenerOrEventListenerObject) { this.removeEventListener(evt, cb); }
+}
+
+export function currentTerm(): string{
+	const termOrder = ["D", "E1", "E2", "A", "B"];
+	var currentTerm = "C";
+	termOrder.forEach(term => {
+		if(Date.now() >= terms[term].starts){
+			currentTerm = term;
+		}
+	});
+	return currentTerm;
 }

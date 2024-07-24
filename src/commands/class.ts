@@ -13,7 +13,8 @@ export async function classCommand(env: Env, userId: string, options: Map<string
     return new JsonResponse({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "Nobody is currently registered for " + getClassString(options.get("class") as string, options.get("section"))
+        content: "Nobody is currently registered for " + getClassString(options.get("class") as string, options.get("section")),
+        flags: InteractionResponseFlags.EPHEMERAL
       }
     });
   }
