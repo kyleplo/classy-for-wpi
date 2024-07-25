@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 BOT_LINK = "https://classywpi.kyleplo.com"
+SCHOOL_NAME = "WPI"
 
 [[d1_databases]]
 binding = "DB" # available in your Worker on env.DB

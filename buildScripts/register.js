@@ -46,7 +46,7 @@ const response = await fetch(url, {
             {name: "C term", value: "C"},
             {name: "D term", value: "D"},
             {name: "E1 term", value: "E1"},
-            {name: "E2 term", value: "E2"},
+            {name: "E2 term", value: "E2"}
           ]
         },
         {
@@ -64,17 +64,18 @@ const response = await fetch(url, {
         {
           type: 3,// STRING,
           name: "term",
-          description: "Term to generate a calendar for",
-          required: true,
+          description: "Term to generate a calendar for (defaults to all terms)",
+          required: false,
           choices: [
             {name: "A term", value: "A"},
             {name: "B term", value: "B"},
             {name: "C term", value: "C"},
-            {name: "D term", value: "D"}
-            {name: "All term", value: "ALL"}
+            {name: "D term", value: "D"},
+            {name: "E1 term", value: "E1"},
+            {name: "E2 term", value: "E2"}
           ]
         }
-        ],
+      ],
     },
     {
       type: 1,// Slash command

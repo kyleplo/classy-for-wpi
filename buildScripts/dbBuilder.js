@@ -34,15 +34,18 @@ const terms = {
   },
   Spring: {
     starts: Infinity,
-    ends: 0
+    ends: 0,
+    partOf: "none"
   },
   Fall: {
     starts: Infinity,
-    ends: 0
+    ends: 0,
+    partOf: "none"
   },
   Summer: {
     starts: Infinity,
-    ends: 0
+    ends: 0,
+    partOf: "none"
   }
 };
 const weekdays = "MTWRF";
@@ -95,7 +98,7 @@ listing["Report_Entry"].forEach(entry => {
   }
 
   classes[classId].sections[sectionId] = {
-    days: entry["Meeting_Day_Patterns"]?.split("").map(d => weekdays.indexOf(d)).filter(d => d > -1),
+    days: entry["Meeting_Day_Patterns"]?.split("").map(d => weekdays.indexOf(d)).filter(d => d > -1) || [],
     starts: parseTime(entry["Meeting_Patterns"]?.split(" | ")[1].split(" - ")[0]),
     ends: parseTime(entry["Meeting_Patterns"]?.split(" | ")[1].split(" - ")[1]),
     type: entry["Instructional_Format"],
@@ -105,11 +108,12 @@ listing["Report_Entry"].forEach(entry => {
 });
 
 Object.values(terms).forEach(term => {
+  term.ends += 8.64e+7;
   term.startDate = new Date(term.starts).toDateString();
   term.endDate = new Date(term.ends).toDateString()
 })
 
 writeFile("./src/db.ts", `
-  export const classes: {[classId: string]: {name: string, sections: {[sectionId: string]: {days?: number[], starts?: number, ends?: number, type: string, room?: string, term?: string}}}} = ${JSON.stringify(classes)};
-  export const terms: {[term: string]: {starts: number, ends: number, startDate: string, endDate: string, partOf?: string}} = ${JSON.stringify(terms)};
+  export const classes: {[classId: string]: {name: string, sections: {[sectionId: string]: {days: number[], starts?: number, ends?: number, type: string, room?: string, term?: string}}}} = ${JSON.stringify(classes)};
+  export const terms: {[term: string]: {starts: number, ends: number, startDate: string, endDate: string, partOf: string}} = ${JSON.stringify(terms)};
   `, () => {});

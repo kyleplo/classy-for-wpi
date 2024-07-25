@@ -1,92 +1,79 @@
-import { InteractionResponseType } from 'discord-interactions';
-import { ClassRow, Writer, JsonResponse } from '../util';
-import { classes } from '../db';
+import { InteractionResponseType, InteractionResponseFlags } from 'discord-interactions';
+import { ClassRow, getClassString, JsonResponse } from '../util';
+import { classes, terms } from '../db';
 
-import ical, { ICalCalendarMethod } from 'ical-generator';
+import ical, { ICalEventRepeatingFreq, ICalWeekday } from 'ical-generator';
 
-const DateMap = ['MO', 'TU', 'WE', 'TH', 'FR'];
-
-const TermStartEnd = {
-	A: [new Date(2024, 7, 22), new Date(2024, 9, 12)],
-	B: [new Date(2024, 9, 21), new Date(2024, 11, 14)],
-	C: [new Date(2025, 0, 15), new Date(2025, 2, 8)],
-	D: [new Date(2025, 2, 17), new Date(2025, 4, 8)],
-};
+const weekdays = [ICalWeekday.MO, ICalWeekday.TU, ICalWeekday.WE, ICalWeekday.TH, ICalWeekday.FR];
 
 export async function calendarCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
 	return new JsonResponse({
 		type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 		data: {
-			embeds: [
-				{
-					title: `${options.has('userName') ? options.get('userName') + "'s c" : 'C'}alendar for ${options.get('term')} term`,
-					url: `${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}&term=${options.get('term')}&v=${Date.now()}`,
-				},
-			],
+			content: `Your schedule has been converted to calendar format. Use [this link](${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}${options.has("term") ? "&term=" + options.get('term') : ""}) to download it.`,
+			flags: InteractionResponseFlags.EPHEMERAL
 		},
 	});
 }
 
-export async function generateCalendarResponse(env: Env, userId: string | null, termSelection: string | null, version: string | null) {
-	if (!userId || !termSelection) {
+export async function generateCalendarResponse(env: Env, userId: string | null, termSelection: string | null) {
+	if (!userId) {
 		return new Response('Bad request.', { status: 400 });
 	}
 
-	const cachedCalendar = await caches.default.match(`${env.BOT_LINK}/calendar?userId=${userId}&term=${term}&v=${version}`);
-	if (cachedCalendar) {
-		return cachedCalendar;
+	const sections = await env.DB.prepare('SELECT classId, sectionId, term FROM classes WHERE userId = ?').bind(userId).all<ClassRow>();
+
+	let includeTerms = [];
+	if (!termSelection) {
+		includeTerms = ["A", "B", "C", "D", "E1", "E2"];
+	} else {
+		includeTerms = [termSelection];
 	}
 
-	let terms = []
-    if (termSelection == "ALL"){
-        terms = ["A", "B", "C", "D"]
-    } else {
-        terms = [termSelection]
-    }
-	const calendar = ical({ name: `{term} term schedule` });
-
-	calendar.method(ICalCalendarMethod.REQUEST);
-	terms.forEach(term => {
-	    const sections = await env.DB.prepare('SELECT classId, sectionId FROM classes WHERE userId = ? AND term = ?')
-		    .bind(userId, term)
-		    .all<ClassRow>();
-
-
-	    sections.forEach((value) => {
-		    const section = classes[value.classId].sections[value.sectionId];
-
-		    const [startDate, endDate] = TermStartEnd[term];
-
-		    let startTime = startDate;
-		    let endTime = startDate;
-		    startTime.setHours(Math.floor(section.starts / 100), section.starts % 100);
-		    endTime.setHours(Math.floor(section.ends / 100), section.starts % 100);
-		    calendar.createEvent({
-			    start: startTime,
-			    end: endTime,
-			    description: `${classes[value.classId].name}\n${section.type}`,
-			    summary: `${value.classId}-${value.sectionId}`,
-			    location: section.room,
-			    repeating: {
-				    freq: 'WEEKLY',
-				    until: endDate,
-			    },
-			    byDay: section.days.map((day) => DateMap[day]),
-		    });
-	    });
+	const calendar = ical({
+		name: `${env.SCHOOL_NAME} ${termSelection ? `${termSelection} term ` : ``}Schedule`,
+		timezone: "America/New_York",
+		prodId: "-//kyleplo.com//classy//EN"
 	});
 
-	const scheduleCalendar = new Response(calendar.toString(), {
+	sections.results.forEach(value => {
+		const section = classes[value.classId].sections[value.sectionId];
+
+		if(!section.starts || !section.ends || !section.room || !section.term){
+			return;
+		}
+
+		if(!includeTerms.includes(section.term) && !includeTerms.includes(terms[section.term].partOf)){
+			return;
+		}
+
+		let startTime = new Date(terms[section.term].starts);
+		let endTime = new Date(terms[section.term].starts);
+		while(!section.days.includes(startTime.getDay() - 1)){
+			startTime.setDate(startTime.getDate() + 1);
+			endTime.setDate(endTime.getDate() + 1);
+		}
+		
+		startTime.setHours(Math.floor(section.starts / 60), section.starts % 60);
+		endTime.setHours(Math.floor(section.ends / 60), section.ends % 60);
+		calendar.createEvent({
+			start: startTime,
+			end: endTime,
+			description: getClassString(value.classId, value.sectionId),
+			summary: `${value.classId} ${section.type}`,
+			location: section.room,
+			repeating: {
+				freq: ICalEventRepeatingFreq.WEEKLY,
+				byDay: section.days.map((day) => weekdays[day]),
+				until: new Date(terms[section.term].ends),
+			}
+		});
+	});
+
+	return new Response(calendar.toString(), {
 		headers: {
 			'content-type': 'text/calendar',
-			'cache-control': 'public, max-age=86400, immutable',
+			'content-disposition': 'attachment; filename=calendar.ics'
 		},
 	});
-
-	if (version) {
-		caches.default.put(`${env.BOT_LINK}/calendar?userId=${userId}&term=${term}&v=${version}`, scheduleCalendar.clone());
-	}
-
-	scheduleCalendar.headers.append('last-modified', new Date().toUTCString());
-	return scheduleCalendar;
 }

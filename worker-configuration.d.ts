@@ -3,6 +3,7 @@
 
 interface Env {
 	BOT_LINK: "https://classywpi.kyleplo.com";
+	SCHOOL_NAME: "WPI";
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_APPLICATION_ID: string;
 	DISCORD_TOKEN: string;
