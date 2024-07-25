@@ -15,9 +15,9 @@ import { listCommand } from "./commands/list";
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
-		if(url.pathname === "/schedule"){
-			return generateScheduleResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"), url.searchParams.get("v"))
-		}else if(url.pathname === "/calendar"){
+		if(url.pathname === "/schedule" || url.pathname === "/schedule.png"){
+			return generateScheduleResponse(env, ctx, url.searchParams.get("userId"), url.searchParams.get("term"), url.searchParams.get("v"))
+		}else if(url.pathname === "/calendar.ics"){
 			return generateCalendarResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"));
 		}/*else if(url.pathname === "/migrate"){
 			await migrateTermColumn(env);

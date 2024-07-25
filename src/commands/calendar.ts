@@ -10,14 +10,14 @@ export async function calendarCommand(env: Env, userId: string, options: Map<str
 	return new JsonResponse({
 		type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 		data: {
-			content: `Your schedule has been converted to calendar format. Use [this link](${env.BOT_LINK}/calendar?userId=${options.get('user') || userId}${options.has("term") ? "&term=" + options.get('term') : ""}) to download it.`,
+			content: `Your schedule has been converted to calendar format. Use [this link](${env.BOT_LINK}/calendar.ics?userId=${options.get('user') || userId}${options.has("term") ? "&term=" + options.get('term') : ""}) to download it.`,
 			flags: InteractionResponseFlags.EPHEMERAL
 		},
 	});
 }
 
 export async function generateCalendarResponse(env: Env, userId: string | null, termSelection: string | null) {
-	if (!userId) {
+	if (!userId || (termSelection && !terms[termSelection])) {
 		return new Response('Bad request.', { status: 400 });
 	}
 

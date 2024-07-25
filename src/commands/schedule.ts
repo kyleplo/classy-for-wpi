@@ -12,15 +12,15 @@ export async function scheduleCommand(env: Env, userId: string, options: Map<str
       embeds: [{
         title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${term} term`,
         image: {
-          url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${term}&v=${Date.now()}`
+          url: `${env.BOT_LINK}/schedule.png?userId=${options.get("user") || userId}&term=${term}&v=${Date.now()}`
         }
       }]
     }
   });
 }
 
-export async function generateScheduleResponse(env: Env, userId: string | null, term: string | null, version: string | null) {
-  if(!userId || !term){
+export async function generateScheduleResponse(env: Env, ctx: ExecutionContext, userId: string | null, term: string | null, version: string | null) {
+  if(!userId || !term || !terms[term]){
     return new Response('Bad request.', { status: 400 });
   }
 
@@ -34,12 +34,12 @@ export async function generateScheduleResponse(env: Env, userId: string | null, 
   const scheduleImage = new Response(await generateScheduleImage(term, sections.results), {
     headers: {
       'content-type': 'image/png',
-      'cache-control': 'public, max-age=86400, immutable'
+      'cache-control': 'public, max-age=604800, immutable'
     }
   });
 
   if(version){
-    caches.default.put(`${env.BOT_LINK}/schedule?userId=${userId}&term=${term}&v=${version}`, scheduleImage.clone());
+    ctx.waitUntil(caches.default.put(`${env.BOT_LINK}/schedule?userId=${userId}&term=${term}&v=${version}`, scheduleImage.clone()));
   }
 
   scheduleImage.headers.append("last-modified", new Date().toUTCString());
