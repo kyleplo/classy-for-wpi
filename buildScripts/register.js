@@ -22,6 +22,14 @@ if (!applicationId) {
 }
 
 const url = `https://discord.com/api/v10/applications/${applicationId}/commands`;
+const termChoices = [
+  {name: "A term", value: "A"},
+  {name: "B term", value: "B"},
+  {name: "C term", value: "C"},
+  {name: "D term", value: "D"},
+  {name: "E1 term", value: "E1"},
+  {name: "E2 term", value: "E2"}
+]
 
 const response = await fetch(url, {
   headers: {
@@ -40,14 +48,7 @@ const response = await fetch(url, {
           name: "term",
           description: "Term to generate a schedule for (defaults to current term)",
           required: false,
-          choices: [
-            {name: "A term", value: "A"},
-            {name: "B term", value: "B"},
-            {name: "C term", value: "C"},
-            {name: "D term", value: "D"},
-            {name: "E1 term", value: "E1"},
-            {name: "E2 term", value: "E2"}
-          ]
+          choices: termChoices
         },
         {
         type: 6,// USER
@@ -66,16 +67,29 @@ const response = await fetch(url, {
           name: "term",
           description: "Term to generate a calendar for (defaults to all terms)",
           required: false,
-          choices: [
-            {name: "A term", value: "A"},
-            {name: "B term", value: "B"},
-            {name: "C term", value: "C"},
-            {name: "D term", value: "D"},
-            {name: "E1 term", value: "E1"},
-            {name: "E2 term", value: "E2"}
-          ]
+          choices: termChoices
         }
       ],
+    },
+    {
+      type: 1,// Slash command
+      name: "list",
+      description: "List all classes that a user is taking",
+      options: [
+        {
+          type: 6,// USER
+          name: "user",
+          description: "User to list classes for (defaults to yourself)",
+          required: false
+        },
+        {
+          type: 3,// STRING,
+          name: "term",
+          description: "Term to list classes for (defaults to all terms)",
+          required: false,
+          choices: termChoices
+        }
+      ]
     },
     {
       type: 1,// Slash command
@@ -167,14 +181,7 @@ const response = await fetch(url, {
         name: "term",
         description: "Term to show classes for (defaults to all terms)",
         required: false,
-        choices: [
-          {name: "A term", value: "A"},
-          {name: "B term", value: "B"},
-          {name: "C term", value: "C"},
-          {name: "D term", value: "D"},
-          {name: "E1 term", value: "E1"},
-          {name: "E2 term", value: "E2"},
-        ]
+        choices: termChoices
       }],
     },
     {
@@ -195,6 +202,10 @@ const response = await fetch(url, {
     {
       type: 2,// User context menu
       name: "Mutual Classes"
+    },
+    {
+      type: 2,// User context menu
+      name: "List Classes"
     }
   ]),
 });

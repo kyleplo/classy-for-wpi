@@ -7,7 +7,8 @@ import { removeClassCommand } from "./commands/removeclass";
 import { classCommand } from "./commands/class";
 import { mutualsCommand } from "./commands/mutuals";
 import { importCommand } from "./commands/import";
-import { generateCalendarResponse } from "./commands/calendar";
+import { calendarCommand, generateCalendarResponse } from "./commands/calendar";
+import { listCommand } from "./commands/list";
 
 //import { migrateTermColumn } from "./migrateTermColumn";
 
@@ -44,6 +45,8 @@ export default {
 			switch (interaction.data.name.toLowerCase()) {
 				case "schedule":
 					return await scheduleCommand(env, userId, options);
+				case "calendar":
+					return await calendarCommand(env, userId, options);
 				case "addclass":
 					return await addClassCommand(env, userId, options);
 				case "removeclass":
@@ -53,6 +56,9 @@ export default {
 				case "mutuals":
 				case "mutual classes":
 					return await mutualsCommand(env, userId, options);
+				case "list":
+				case "list classes":
+					return await listCommand(env, userId, options);
 				case "import":
 					return await importCommand(env, userId, options);
 				default:
