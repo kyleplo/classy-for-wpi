@@ -188,12 +188,20 @@ const response = await fetch(url, {
       type: 1,// Slash command,
       name: "import",
       description: "Import your course list from Workday, or show instructions to do so",
-      options: [{
-        type: 11,// ATTACHMENT,
-        name: "file",
-        description: "File from Workday containing your course list",
-        required: false
-      }]
+      options: [
+        {
+          type: 11,// ATTACHMENT,
+          name: "file",
+          description: "File from Workday containing your course list",
+          required: false
+        },
+        {
+          type: 5,// BOOLEAN
+          name: "keep",
+          description: "When true, existing classes will be kept alongside the import (defaults to false)",
+          required: false
+        }
+      ]
     },
     {
       type: 2,// User context menu

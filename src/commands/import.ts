@@ -8,7 +8,7 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
     return new JsonResponse({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "In Workday, open your course list and download your courses as an Excel spreadsheet. Then use the `/import` command again with the `file` option and upload your file.",
+        content: "In Workday, open your course list and download your courses as an Excel spreadsheet. Then use the `/import` command again with the `file` option and upload your file.\nBy default, this command will override your existing class list. Set the `keep` option to `false` to keep your existing classes alongside the imported ones.",
         flags: InteractionResponseFlags.EPHEMERAL
       }
     });
@@ -54,12 +54,17 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
     });
 
     if(batch.length){
+      const classCount = batch.length;
+      if(!options.has("keep") || !options.get("keep")){
+        batch.unshift(env.DB.prepare("DELETE FROM classes WHERE userId = ?").bind(userId));
+      }
+
       await env.DB.batch(batch);
 
       return new JsonResponse({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Successfully imported ${batch.length} class sections.`,
+          content: `Successfully imported ${classCount} class sections.`,
           flags: InteractionResponseFlags.EPHEMERAL
         }
       });
