@@ -25,9 +25,9 @@ export async function generateCalendarResponse(env: Env, userId: string | null, 
 
 	let includeTerms = [];
 	if (!termSelection) {
-		includeTerms = ["A", "B", "C", "D", "E1", "E2"];
+		includeTerms = ["A", "B", "C", "D", "E1", "E2", "Spring", "Fall", "Summer"];
 	} else {
-		includeTerms = [termSelection];
+		includeTerms = [termSelection, terms[termSelection].partOf];
 	}
 
 	const calendar = ical({
@@ -43,7 +43,7 @@ export async function generateCalendarResponse(env: Env, userId: string | null, 
 			return;
 		}
 
-		if(!includeTerms.includes(section.term) && !includeTerms.includes(terms[section.term].partOf)){
+		if(!includeTerms.includes(section.term)){
 			return;
 		}
 
