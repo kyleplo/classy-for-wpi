@@ -19,7 +19,7 @@ export async function dormListCommand(env: Env, userId: string, options: Map<str
     return new JsonResponse({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "Nobody has inputted living at " + dorms[options.get("dorm") as string] + "\nUse the `setdorm` command to set your dorm.",
+        content: "Nobody has inputted living at " + dorms[options.get("dorm") as string].name + "\nUse the `setdorm` command to set your dorm.",
         flags: InteractionResponseFlags.EPHEMERAL
       }
     });
@@ -33,7 +33,7 @@ export async function dormListCommand(env: Env, userId: string, options: Map<str
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + " people live" : "1 person lives") + " at " + dorms[options.get("dorm") as string] + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (value[1] ? " (" + value[1] + ")" : "")).join(""),
+      content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + " people live" : "1 person lives") + " at " + dorms[options.get("dorm") as string].name + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (value[1] ? " (" + value[1] + ")" : "")).join(""),
       allowed_mentions: {
         users: Object.keys(userIds)
       },

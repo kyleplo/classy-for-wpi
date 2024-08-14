@@ -18,7 +18,7 @@ export async function classCommand(env: Env, userId: string, options: Map<string
     if (options.has("section")) {
       users = await env.DB.prepare("SELECT userId, room FROM classes WHERE dorm = ? AND classId = ? AND sectionId = ?").bind(options.get("dorm"), options.get("class"), options.get("section")).all<ClassRow>();
     } else {
-      users = await env.DB.prepare("SELECT userId, sectionId, room FROM dorm = ? AND classes WHERE classId = ?").bind(options.get("dorm"), options.get("class")).all<ClassRow>();
+      users = await env.DB.prepare("SELECT userId, sectionId, room FROM classes WHERE dorm = ? AND classId = ?").bind(options.get("dorm"), options.get("class")).all<ClassRow>();
     }
   } else {
     if (options.has("section")) {
@@ -32,7 +32,7 @@ export async function classCommand(env: Env, userId: string, options: Map<string
     return new JsonResponse({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "Nobody" + (options.has("dorm") ? " at " + dorms[options.get("dorm") as string] : "") + " is currently registered for " + getClassString(options.get("class") as string, options.get("section")) + "\nYou can import classes from Workday with the `import` command, or add tbem manually with the `addclass` command.",
+        content: "Nobody" + (options.has("dorm") ? " at " + dorms[options.get("dorm") as string].name : "") + " is currently registered for " + getClassString(options.get("class") as string, options.get("section")) + "\nYou can import classes from Workday with the `import` command, or add tbem manually with the `addclass` command.",
         flags: InteractionResponseFlags.EPHEMERAL
       }
     });
@@ -50,7 +50,7 @@ export async function classCommand(env: Env, userId: string, options: Map<string
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + " people" : "1 person") + (options.has("dorm") ? " at " + dorms[options.get("dorm") as string] : "") + (Object.keys(userIds).length > 1 ? " are" : " is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (value[1].room ? "(" + value[1].room + ")" : (options.get("section") ? "" : " (" + value[1].sections.map(sectionId => options.get("class") + "-" + sectionId).join(", ") + ")"))).join(""),
+      content: (Object.keys(userIds).length > 1 ? Object.keys(userIds).length + " people" : "1 person") + (options.has("dorm") ? " at " + dorms[options.get("dorm") as string].name : "") + (Object.keys(userIds).length > 1 ? " are" : " is") + " registered for " + getClassString(options.get("class") as string, options.get("section")) + ":" + Object.entries(userIds).map(value => "\n- <@" + value[0] + ">" + (value[1].room ? " (" + value[1].room + ")" : (options.get("section") ? "" : " (" + value[1].sections.map(sectionId => options.get("class") + "-" + sectionId).join(", ") + ")"))).join(""),
       allowed_mentions: {
         users: Object.keys(userIds)
       },
