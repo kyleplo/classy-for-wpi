@@ -64,8 +64,7 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
       return new JsonResponse({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Successfully imported ${classCount} class sections.`,
-          flags: InteractionResponseFlags.EPHEMERAL
+          content: `Successfully imported ${classCount} class sections.`
         }
       });
     }else{

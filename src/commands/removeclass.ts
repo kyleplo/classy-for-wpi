@@ -1,4 +1,4 @@
-import { InteractionResponseFlags, InteractionResponseType } from "discord-interactions";
+import { InteractionResponseType } from "discord-interactions";
 import { JsonResponse } from "../util";
 
 export async function removeClassCommand (env: Env, userId: string, options: Map<string, string>): Promise<Response> {
@@ -18,8 +18,7 @@ export async function removeClassCommand (env: Env, userId: string, options: Map
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: "Successfully removed from class",
-      flags: InteractionResponseFlags.EPHEMERAL
+      content: "Successfully removed from class"
     }
   });
 }

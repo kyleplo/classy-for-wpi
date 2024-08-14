@@ -35,8 +35,7 @@ export async function addClassCommand (env: Env, userId: string, options: Map<st
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: "Successfully added to " + getClassString(options.get("class") as string),
-      flags: InteractionResponseFlags.EPHEMERAL
+      content: "Successfully added to " + getClassString(options.get("class") as string)
     }
   });
 }

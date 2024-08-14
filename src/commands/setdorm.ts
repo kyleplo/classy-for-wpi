@@ -45,11 +45,19 @@ export async function setDormCommand (env: Env, userId: string, options: Map<str
     });
   }
 
+  if(!options.has("dorm")){
+    return new JsonResponse({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: "Successfully cleared your dorm"
+      }
+    });
+  }
+
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: "Successfully set your dorm",
-      flags: InteractionResponseFlags.EPHEMERAL
+      content: "Successfully set your dorm to " + dorms[options.get("dorm") as string] + (options.has("room") ? " - " + options.get("room") : "")
     }
   });
 }
