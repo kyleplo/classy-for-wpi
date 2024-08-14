@@ -30,6 +30,35 @@ const termChoices = [
   {name: "E1 term", value: "E1"},
   {name: "E2 term", value: "E2"}
 ]
+const dormChoices = [
+  {name: "Daniels Hall", value: "daniels"},
+  {name: "East Hall", value: "east"},
+  {name: "Faraday Hall", value: "faraday"},
+  {name: "Founders Hall", value: "founders"},
+  {name: "Institute Hall", value: "institute"},
+  {name: "Morgan Hall", value: "morgan"},
+  {name: "Sanford Riley Hall", value: "sanford-riley"},
+  {name: "Stoddard Complex", value: "stoddard"},
+  {name: "WPI Townhouses", value: "townhouses"},
+  {name: "Ellsworth Apartments", value: "ellsworth"},
+  {name: "Fuller Apartments", value: "fuller"},
+  {name: "Cedar House A", value: "cedar-a"},
+  {name: "Cedar House B", value: "cedar-b"},
+  {name: "Elbridge House", value: "elbridge"},
+  {name: "Fruit House", value: "fruit"},
+  {name: "Hackfeld House", value: "hackfeld"},
+  {name: "Marston House A", value: "marston-a"},
+  {name: "Marston House B", value: "marston-b"},
+  {name: "Oak House", value: "oak"},
+  {name: "Schussler House", value: "schussler"},
+  {name: "Sever House", value: "sever"},
+  {name: "Trowbridge House", value: "trowbridge"},
+  {name: "Wachusett House", value: "wachusett"},
+  {name: "West House", value: "west"},
+  {name: "William House", value: "william"},
+  {name: "Off Campus", value: "off-campus"},
+  {name: "Online", value: "online"},
+]
 
 const response = await fetch(url, {
   headers: {
@@ -164,6 +193,13 @@ const response = await fetch(url, {
         name: "section",
         description: "Section to check registered users of (ex. AL01, defaults to all sections)",
         required: false
+      },
+      {
+        type: 3,// STRING,
+        name: "dorm",
+        description: "Dorm building to filter by (optional)",
+        required: false,
+        choices: dormChoices
       }],
     },
     {
@@ -204,6 +240,47 @@ const response = await fetch(url, {
       ]
     },
     {
+      type: 1,// Slash command
+      name: "dorm",
+      description: "Show the dorm a user lives in",
+      options: [{
+        type: 6,// USER
+        name: "user",
+        description: "User to show the dorm for",
+        required: true
+      }],
+    },
+    {
+      type: 1,// Slash command
+      name: "setdorm",
+      description: "Set your dorm",
+      options: [{
+        type: 3,// STRING,
+        name: "dorm",
+        description: "Dorm building you are in (leave blank to clear)",
+        required: false,
+        choices: dormChoices
+      },
+      {
+        type: 3,// STRING,
+        name: "room",
+        description: "Room you are in within your dorm building (leave blank to clear)",
+        required: false
+      }],
+    },
+    {
+      type: 1,// Slash command
+      name: "dormlist",
+      description: "List all users who live in the specified dorm building",
+      options: [{
+        type: 3,// STRING,
+        name: "dorm",
+        description: "Dorm building to list users for",
+        required: true,
+        choices: dormChoices
+      }],
+    },
+    {
       type: 2,// User context menu
       name: "Schedule"
     },
@@ -214,6 +291,10 @@ const response = await fetch(url, {
     {
       type: 2,// User context menu
       name: "List Classes"
+    },
+    {
+      type: 2,// User context menu
+      name: "Show Dorm"
     }
   ]),
 });

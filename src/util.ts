@@ -5,7 +5,10 @@ export type ClassRow = {
 	RowID: number,
 	userId: string,
   classId: string,
-	sectionId: string
+	sectionId: string,
+	term: string,
+	dorm: string | undefined,
+	room: string | undefined
 }
 
 export async function verifyDiscordRequest(request: Request, env: Env): Promise<{

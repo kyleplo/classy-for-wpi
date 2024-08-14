@@ -9,6 +9,9 @@ import { mutualsCommand } from "./commands/mutuals";
 import { importCommand } from "./commands/import";
 import { calendarCommand, generateCalendarResponse } from "./commands/calendar";
 import { listCommand } from "./commands/list";
+import { dormCommand } from "./commands/dorm";
+import { setDormCommand } from "./commands/setdorm";
+import { dormListCommand } from "./commands/dormlist";
 
 //import { migrateTermColumn } from "./migrateTermColumn";
 
@@ -61,6 +64,13 @@ export default {
 					return await listCommand(env, userId, options);
 				case "import":
 					return await importCommand(env, userId, options);
+				case "dorm":
+				case "show dorm":
+					return await dormCommand(env, userId, options);
+				case "setdorm":
+					return await setDormCommand(env, userId, options);
+				case "dormlist":
+					return await dormListCommand(env, userId, options);
 				default:
 					return new JsonResponse({ error: 'Unknown Type' }, { status: 400 });
 			}
