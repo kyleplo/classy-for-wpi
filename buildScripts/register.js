@@ -36,6 +36,7 @@ const dormChoices = [
   {name: "Faraday Hall", value: "faraday"},
   {name: "Founders Hall", value: "founders"},
   {name: "Institute Hall", value: "institute"},
+  {name: "Messenger Hall", value: "messenger"},
   {name: "Morgan Hall", value: "morgan"},
   {name: "Sanford Riley Hall", value: "sanford-riley"},
   {name: "Stoddard Complex", value: "stoddard"},
@@ -55,7 +56,6 @@ const dormChoices = [
   {name: "West House", value: "west"},
   {name: "William House", value: "william"},
   {name: "Off Campus", value: "off-campus"},
-  {name: "Online", value: "online"},
 ]
 
 const response = await fetch(url, {

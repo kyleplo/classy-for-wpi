@@ -57,7 +57,7 @@ export async function setDormCommand (env: Env, userId: string, options: Map<str
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: "Successfully set your dorm to " + dorms[options.get("dorm") as string] + (options.has("room") ? " - " + options.get("room") : "")
+      content: "Successfully set your dorm to " + dorms[options.get("dorm") as string].name + (options.has("room") ? " - " + options.get("room") : "")
     }
   });
 }
