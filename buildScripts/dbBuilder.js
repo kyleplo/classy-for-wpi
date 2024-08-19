@@ -49,7 +49,6 @@ const terms = {
   }
 };
 const weekdays = "MTWRF";
-const year = new Date().getFullYear();
 
 function parseTime(time){
   if(!time){
@@ -64,7 +63,7 @@ function parseTime(time){
 const listing = await fetch("https://courselistings.wpi.edu/assets/prod-data-raw.json").then(r => r.json());
 
 listing["Report_Entry"].forEach(entry => {
-  if(!entry["Academic_Year"].includes(year)){
+  if(entry["Academic_Year"] !== "2024 - 2025 Academic Year"){
     return;
   }
 
@@ -108,6 +107,9 @@ listing["Report_Entry"].forEach(entry => {
 });
 
 Object.values(terms).forEach(term => {
+  if(!isFinite(term.starts)){
+    term.starts = 0;
+  }
   term.ends += 8.64e+7;
   term.startDate = new Date(term.starts).toDateString();
   term.endDate = new Date(term.ends).toDateString()
