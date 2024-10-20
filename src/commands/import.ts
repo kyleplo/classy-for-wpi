@@ -1,6 +1,6 @@
 import { InteractionResponseFlags, InteractionResponseType } from "discord-interactions";
 import { JsonResponse } from "../util";
-import { parse } from "node-xlsx";
+import exceljs from 'exceljs';
 import { classes } from "../db";
 
 export async function importCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
@@ -28,9 +28,10 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
     }
 
     const file = await fetch(attachment.url).then(r => r.arrayBuffer());
-    const sheet = parse(file);
+    const workbook = new exceljs.Workbook();
+    const sheet = await workbook.xlsx.load(file);
 
-    if(sheet.length !== 1 || (sheet[0].name !== "View My Courses" && sheet[0].name !== "Sheet1") || (sheet[0].data[0][0] !== "My Enrolled Courses" && sheet[0].data[0][0] !== "View My Courses")){
+    if(sheet.worksheets.length !== 1 || (sheet.worksheets[0].name !== "View My Courses" && sheet.worksheets[0].name !== "Sheet1")){
       return new JsonResponse({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -42,9 +43,13 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
 
     const batch: D1PreparedStatement[] = [];
 
-    sheet[0].data.forEach(row => {
-      if(row[8] === "Registered" && row[4]){
-        const section = row[4].replace(" ", "").split(" ")[0].split("-");
+    sheet.worksheets[0].eachRow(row => {
+      if(!Array.isArray(row.values)){
+        return;
+      }
+
+      if(row.values[9] === "Registered" && row.values[5]){
+        const section = row.values[5].toString().replace(" ", "").split(" ")[0].split("-");
 
         if(!classes[section[0]] || !classes[section[0]].sections[section[1]]){
           return;
