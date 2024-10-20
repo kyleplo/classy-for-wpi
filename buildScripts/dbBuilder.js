@@ -63,7 +63,10 @@ function parseTime(time){
 const listing = await fetch("https://courselistings.wpi.edu/assets/prod-data-raw.json").then(r => r.json());
 
 listing["Report_Entry"].forEach(entry => {
-  if(entry["Academic_Year"] !== "2024 - 2025 Academic Year"){
+  const starts = new Date(entry["Course_Section_Start_Date"]).getTime();
+  const ends = new Date(entry["Course_Section_End_Date"]).getTime();
+
+  if(starts < Date.now() - 7.889399e+9 || ends > Date.now() + 2.36682e+10){
     return;
   }
 
@@ -82,9 +85,6 @@ listing["Report_Entry"].forEach(entry => {
     term = entry["Starting_Academic_Period_Type"];
   }
 
-  const starts = new Date(entry["Course_Section_Start_Date"]).getTime();
-  const ends = new Date(entry["Course_Section_End_Date"]).getTime();
-
   if(terms[term]){
     if(starts < terms[term].starts){
       terms[term].starts = starts
@@ -102,6 +102,7 @@ listing["Report_Entry"].forEach(entry => {
     ends: parseTime(entry["Meeting_Patterns"]?.split(" | ")[1].split(" - ")[1]),
     type: entry["Instructional_Format"],
     room: entry["Locations"],
+    instructors: entry["Instructors"]?.split("; ") || [],
     term: term
   }
 });
@@ -117,6 +118,6 @@ Object.values(terms).forEach(term => {
 
 writeFile("./src/db.ts", `
   export const dorms: {[dormId: string]: {name: string}} = {"daniels":{name:"Daniels Hall"},"east":{name:"East Hall"},"faraday":{name:"Faraday Hall"},"founders":{name:"Founders Hall"},"institute":{name:"Institute Hall"},"messenger":{name:"Messenger Hall"},"morgan":{name:"Morgan Hall"},"sanford-riley":{name:"Sanford Riley Hall"},"stoddard":{name:"Stoddard Complex"},"townhouses":{name:"WPI Townhouses"},"ellsworth":{name:"Ellsworth Apartments"},"fuller":{name:"Fuller Apartments"},"cedar":{name:"Cedar Houses"},"elbridge":{name:"Elbridge House"},"fruit":{name:"Fruit House"},"hackfeld":{name:"Hackfeld House"},"marston":{name:"Marston Houses"},"oak":{name:"Oak House"},"schussler":{name:"Schussler House"},"sever":{name:"Sever House"},"trowbridge":{name:"Trowbridge House"},"wachusett":{name:"Wachusett House"},"west":{name:"West House"},"william":{name:"William House"},"off-campus":{name:"Off Campus"}};
-  export const classes: {[classId: string]: {name: string, sections: {[sectionId: string]: {days: number[], starts?: number, ends?: number, type: string, room?: string, term?: string}}}} = ${JSON.stringify(classes)};
+  export const classes: {[classId: string]: {name: string, sections: {[sectionId: string]: {days: number[], starts?: number, ends?: number, type: string, room?: string, term?: string, instructors: string[]}}}} = ${JSON.stringify(classes)};
   export const terms: {[term: string]: {starts: number, ends: number, startDate: string, endDate: string, partOf: string}} = ${JSON.stringify(terms)};
   `, () => {});

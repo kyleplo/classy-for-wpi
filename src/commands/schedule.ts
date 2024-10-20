@@ -13,7 +13,8 @@ export async function scheduleCommand(env: Env, userId: string, options: Map<str
         title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${term} term`,
         image: {
           url: `${env.BOT_LINK}/schedule.png?userId=${options.get("user") || userId}&term=${term}&v=${Date.now()}`
-        }
+        },
+        url: `${env.BOT_LINK}/schedule?userId=${options.get("user") || userId}&term=${term}`
       }]
     }
   });
@@ -46,6 +47,16 @@ export async function generateScheduleResponse(env: Env, ctx: ExecutionContext, 
   return scheduleImage;
 }
 
+export async function generateSchedulePageResponse(env: Env, ctx: ExecutionContext, userId: string | null, term: string | null) {
+  if(!userId || !term || !terms[term]){
+    return new Response('Bad request.', { status: 400 });
+  }
+
+  const sections = await env.DB.prepare("SELECT classId, sectionId FROM classes WHERE userId = ? AND (term = ? OR term = ?)").bind(userId, term, terms[term].partOf).all<ClassRow>();
+
+  return generateSchedulePage(term, sections.results);
+}
+
 const colors = ["rgb(172, 114, 94)", "rgb(250, 87, 60)", "rgb(255, 173, 70)",
 			"rgb(66, 214, 146)", "rgb(123, 209, 72)", "rgb(154, 156, 255)",
 			"rgb(179, 220, 108)", "rgb(202, 189, 191)",
@@ -68,7 +79,7 @@ function ellipsis(ctx: Context, text: string, width: number): string {
 
 var image: Bitmap, ctx: Context;
 
-async function generateScheduleImage(term: string, schedule: ClassRow[]): Promise<ReadableStream> {
+function prepareSchedule(schedule: ClassRow[]){
   var earliest = 1290;
   var latest = 360;
   var classColors: {[classId: string]: string} = {};
@@ -92,6 +103,11 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
     }
   });
 
+  return { earliest, latest, classColors }
+}
+
+async function generateScheduleImage(term: string, schedule: ClassRow[]): Promise<ReadableStream> {
+  const { earliest, latest, classColors } = prepareSchedule(schedule);
   const pxPerMin = 575 / (latest - earliest);
   
   if(!image || !ctx){
@@ -157,4 +173,153 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
   const { readable, writable } = new TransformStream();
   await encodePNGToStream(image, new Writer(writable) as any);
   return readable;
+}
+
+async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise<Response> {
+  const { earliest, latest, classColors } = prepareSchedule(schedule);
+
+  const hours: {
+    hour: number,
+    classes: (null | {
+      classId: string,
+      id: string,
+      name: string,
+      type: string,
+      room: string,
+      start: number,
+      length: number,
+      instructors: string[]
+    })[]
+  }[] = [];
+  for(var h = Math.ceil(earliest / 60);h < Math.ceil(latest / 60);h++){
+    hours.push({
+      hour: h,
+      classes: [null, null, null, null, null]
+    });
+  }
+
+  schedule.forEach(value => {
+    const section = classes[value.classId.toUpperCase()].sections[value.sectionId.toUpperCase()];
+
+    if(!section.days){
+      return;
+    }
+
+    section.days.forEach(day => {
+      if(!section.starts || !section.ends || !section.room){
+        return;
+      }
+
+      for(var h = Math.floor((section.starts - earliest) / 60);h * 60 <= section.ends - earliest;h++){
+        hours[h].classes[day] = {
+          classId: value.classId,
+          id: value.classId.toUpperCase() + "-" + value.sectionId.toUpperCase(),
+          name: classes[value.classId.toUpperCase()].name,
+          type: section.type,
+          room: section.room,
+          start: Math.floor(section.starts / 60),
+          length: Math.ceil((section.ends - section.starts) / 60),
+          instructors: section.instructors
+        };
+      }
+    });
+  });
+  
+  return new Response(`<!DOCTYPE html>
+<html>
+  <head>
+    <title>Schedule</title>
+    <style>
+      html {
+        --bg: black;
+        background: var(--bg);
+        color: white;
+      }
+
+      tr:not(:first-child) {
+        height: 70px;
+      }
+
+      td:not(:first-child) {
+        min-width: max(200px, calc(20vw - 20px));
+      }
+
+      table {
+        overflow-x: scroll;
+        white-space: nowrap;
+      }
+
+      th, td {
+        white-space: normal;
+        box-sizing: border-box;
+        padding: 5px;
+      }
+
+      body {
+        font-family: sans-serif;
+      }
+
+      th {
+        background: var(--bg);
+      }
+
+      td {
+        background: #222;
+        color: black;
+      }
+
+      tr:first-child {
+        position: sticky;
+        top: 0;
+      }
+
+      tr {
+        overflow: hidden;
+        width: 0px;
+      }
+
+      th:first-child {
+        position: sticky;
+        left: 0;
+      }
+
+      th:not(:first-child) {
+        width: max(200px, calc(20vw - 20px));
+      }
+
+      @media (prefers-color-scheme: light) {
+        html {
+          color: black;
+          --bg: white;
+        }
+
+        td {
+          background: #ddd;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr><th>${term} term</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
+      ${hours.map(h => {
+        return `<tr><th scope="row">${(h.hour > 12 ? h.hour - 12 : h.hour) + (h.hour > 11 ? "PM" : "AM")}</th>${
+          h.classes.map(section => {
+            if(!section){
+              return `<td></td>`
+            }else if(section.start !== h.hour){
+              return ``;
+            }
+            
+            return `<td style="background-color: ${classColors[section.classId]}" rowspan="${section.length}"><strong>${section.id}</strong><br><em>${section.name}</em><br>${section.room}<br>${section.type}<br>${section.instructors.join(", ")}</td>`
+          }).join("")
+        }</tr>`
+      }).join("")}
+    </table>
+  </body>
+</html>`, {
+    headers: {
+      "Content-Type": "text/html"
+    }
+  });
 }

@@ -1,7 +1,7 @@
 import { InteractionType, InteractionResponseType } from "discord-interactions";
 import { JsonResponse, verifyDiscordRequest, parseOptions } from "./util";
 
-import { generateScheduleResponse, scheduleCommand } from "./commands/schedule";
+import { generateSchedulePageResponse, generateScheduleResponse, scheduleCommand } from "./commands/schedule";
 import { addClassCommand } from "./commands/addclass";
 import { removeClassCommand } from "./commands/removeclass";
 import { classCommand } from "./commands/class";
@@ -18,8 +18,10 @@ import { dormListCommand } from "./commands/dormlist";
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
-		if(url.pathname === "/schedule" || url.pathname === "/schedule.png"){
+		if(url.pathname === "/schedule.png"){
 			return generateScheduleResponse(env, ctx, url.searchParams.get("userId"), url.searchParams.get("term"), url.searchParams.get("v"))
+		}else if(url.pathname === "/schedule"){
+			return generateSchedulePageResponse(env, ctx, url.searchParams.get("userId"), url.searchParams.get("term"))
 		}else if(url.pathname === "/calendar.ics"){
 			return generateCalendarResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"));
 		}/*else if(url.pathname === "/migrate"){

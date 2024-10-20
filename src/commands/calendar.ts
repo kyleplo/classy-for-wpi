@@ -59,7 +59,7 @@ export async function generateCalendarResponse(env: Env, userId: string | null, 
 		calendar.createEvent({
 			start: startTime,
 			end: endTime,
-			description: getClassString(value.classId, value.sectionId),
+			description: getClassString(value.classId, value.sectionId) + (section.instructors.length ? " with " + section.instructors.join(", ") : ""),
 			summary: `${value.classId} ${section.type}`,
 			location: section.room,
 			repeating: {
