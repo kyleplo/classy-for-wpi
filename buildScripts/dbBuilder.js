@@ -1,5 +1,16 @@
 import { writeFile } from "fs";
 
+function parseClassCode(code) {
+	const parsed = /([A-Z]{2,} ?[0-9]{3,}X?)-([A-Z][A-Za-z-0-9]*)/g.exec(code.toUpperCase());
+	if(!parsed || parsed.length !== 3){
+		return;
+	}
+	return  {
+		course: parsed[1].replace(" ", ""),
+		section: parsed[2]
+	};
+}
+
 const classes = {};
 const terms = {
   A: {
@@ -70,12 +81,15 @@ listing["Report_Entry"].forEach(entry => {
     return;
   }
 
-  const classId = entry["Course_Section"].split("-")[0].replace(" ", "");
-  const sectionId = entry["Course_Section"].split(" - ")[0].split("-")[1].split(" ")[0].trimEnd();
+  const section = parseClassCode(entry["Course_Section"]);
 
-  if(!classes[classId]){
-    classes[classId] = {
-      name: entry["Course_Title"].split(" - ")[1] || classId,
+  if(!section) {
+    console.log("Failed to parse course code: " + entry["Course_Section"]);
+  }
+
+  if(!classes[section.course]){
+    classes[section.course] = {
+      name: entry["Course_Title"].split(" - ")[1] || section.course,
       sections: {}
     }
   }
@@ -96,7 +110,7 @@ listing["Report_Entry"].forEach(entry => {
     term = undefined;
   }
 
-  classes[classId].sections[sectionId] = {
+  classes[section.course].sections[section.section] = {
     days: entry["Meeting_Day_Patterns"]?.split("").map(d => weekdays.indexOf(d)).filter(d => d > -1) || [],
     starts: parseTime(entry["Meeting_Patterns"]?.split(" | ")[1].split(" - ")[0]),
     ends: parseTime(entry["Meeting_Patterns"]?.split(" | ")[1].split(" - ")[1]),

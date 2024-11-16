@@ -14,6 +14,7 @@ import { setDormCommand } from "./commands/setdorm";
 import { dormListCommand } from "./commands/dormlist";
 
 //import { migrateTermColumn } from "./migrateTermColumn";
+//import { removeDuplicateRows } from "./removeDuplicateRows";
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -24,7 +25,10 @@ export default {
 			return generateSchedulePageResponse(env, ctx, url.searchParams.get("userId"), url.searchParams.get("term"))
 		}else if(url.pathname === "/calendar.ics"){
 			return generateCalendarResponse(env, url.searchParams.get("userId"), url.searchParams.get("term"));
-		}/*else if(url.pathname === "/migrate"){
+		}/*else if(url.pathname === "/removeDuplicateRows"){
+			await removeDuplicateRows(env);
+			return new Response();
+		}*//*else if(url.pathname === "/migrate"){
 			await migrateTermColumn(env);
 			return new Response();
 		}*/

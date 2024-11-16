@@ -62,7 +62,9 @@ export function organizeClassList(sections: ClassRow[]): string[] {
 	const classMap: {[classId: string]: string[]} = {};
 	sections.forEach(section => {
 		if(classMap[section.classId]){
-			classMap[section.classId].push(section.sectionId);
+			if(!classMap[section.classId].includes(section.sectionId)){
+				classMap[section.classId].push(section.sectionId);
+			}
 		}else{
 			classMap[section.classId] = [section.sectionId]
 		}
@@ -79,6 +81,21 @@ export function getClassString(classId: string, sectionId?: string): string {
 		return "Unknown class (" + classId + "-" + sectionId + ")";
 	}
 	return sectionId ? classes[classId].name + " (" + classId + "-" + sectionId + ")" : classes[classId].name + " (" + classId + ")";
+}
+
+export function parseClassCode(code: string) {
+	const parsed = /([A-Z]{2,} ?[0-9]{3,}X?)-([A-Z][A-Za-z-0-9]*)/g.exec(code.toUpperCase());
+	if(!parsed || parsed.length !== 3){
+		return;
+	}
+	const course = {
+		course: parsed[1].replace(" ", ""),
+		section: parsed[2]
+	};
+	if(!classes[course.course] || !classes[course.course].sections[course.section]) {
+		return;
+	}
+	return course;
 }
 
 export class JsonResponse extends Response {

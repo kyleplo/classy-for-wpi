@@ -1,5 +1,5 @@
 import { InteractionResponseFlags, InteractionResponseType } from "discord-interactions";
-import { JsonResponse } from "../util";
+import { JsonResponse, parseClassCode } from "../util";
 import exceljs from 'exceljs';
 import { classes } from "../db";
 
@@ -49,12 +49,12 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
       }
 
       if(row.values[9] === "Registered" && row.values[5]){
-        const section = row.values[5].toString().replace(" ", "").split(" ")[0].split("-");
+        const section = parseClassCode(row.values[5].toString());
 
-        if(!classes[section[0]] || !classes[section[0]].sections[section[1]]){
+        if(!section){
           return;
         }
-        batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, section[0], section[1], classes[section[0]].sections[section[1]].term))
+        batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, section.course, section.section, classes[section.course].sections[section.section].term))
       }
     });
 
