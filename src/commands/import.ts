@@ -48,13 +48,16 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
         return;
       }
 
-      if(row.values[9] === "Registered" && row.values[5]){
-        const section = parseClassCode(row.values[5].toString());
+      if(row.values[8] === "Registered" && row.values[7]){
+        try {
+          const year = new Date(row.values[13] as string).getFullYear().toString();
+          const section = parseClassCode(row.values[7].toString(), year);
 
-        if(!section){
-          return;
-        }
-        batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, section.course, section.section, classes[section.course].sections[section.section].term))
+          if(!section){
+            return;
+          }
+          batch.push(env.DB.prepare("INSERT INTO classes (userId, classId, sectionId, term)\nVALUES (?, ?, ?, ?)").bind(userId, section.course, section.section, classes[section.course].years[year][section.section].term));
+        } catch (_) {}
       }
     });
 

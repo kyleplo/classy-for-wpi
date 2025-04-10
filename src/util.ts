@@ -83,7 +83,7 @@ export function getClassString(classId: string, sectionId?: string): string {
 	return sectionId ? classes[classId].name + " (" + classId + "-" + sectionId + ")" : classes[classId].name + " (" + classId + ")";
 }
 
-export function parseClassCode(code: string) {
+export function parseClassCode(code: string, year: string) {
 	const parsed = /([A-Z]{2,} ?[0-9]{3,}X?)-([A-Z][A-Za-z-0-9]*)/g.exec(code.toUpperCase());
 	if(!parsed || parsed.length !== 3){
 		return;
@@ -92,7 +92,7 @@ export function parseClassCode(code: string) {
 		course: parsed[1].replace(" ", ""),
 		section: parsed[2]
 	};
-	if(!classes[course.course] || !classes[course.course].sections[course.section]) {
+	if(!classes[course.course] || !classes[course.course].years[year][course.section]) {
 		return;
 	}
 	return course;
@@ -150,13 +150,46 @@ export class Writer extends EventTarget {
   removeListener(evt: string, cb: EventListenerOrEventListenerObject) { this.removeEventListener(evt, cb); }
 }
 
-export function currentTerm(): string{
-	const termOrder = ["D", "E1", "E2", "A", "B"];
-	var currentTerm = "C";
-	termOrder.forEach(term => {
-		if(Date.now() >= terms[term].starts){
-			currentTerm = term;
+export function currentTerm(): string {
+	var currentTerm = "none";
+	var currentTermEnd = Infinity;
+	for (const [termName, term] of Object.entries(terms)) {
+		if (term.ends > Date.now() && term.ends < currentTermEnd && term.partOf !== "none" && !termName.startsWith("Graduate")) {
+			currentTerm = termName;
+			currentTermEnd = term.ends;
 		}
-	});
+	}
 	return currentTerm;
+}
+
+export function currentAcademicYear(): number {
+	return new Date(terms[currentTerm()].starts).getFullYear();
+}
+
+export function academicYearFromTerm(term: string): number {
+	var year = parseInt(term.slice(term.length - 4));
+	if (isNaN(year)) {
+		return 2024;
+	}
+	if (!(term.startsWith("A") || term.startsWith("B") || term.startsWith("Fall"))) {
+		year--;
+	}
+	return year;
+}
+
+export function displayTerm(term: string): string {
+	if (term.length < 4 || isNaN(parseInt(term[term.length - 4]))) {
+		switch (term) {
+			case "A":
+				return "A term 2024";
+			case "B":
+				return "B term 2024";
+			case "Fall":
+				return "Fall term 2024";
+			default:
+				return term + " term 2025";
+		}
+	}
+
+	return term.slice(0, term.length - 4) + " term " + term.slice(term.length - 4);
 }

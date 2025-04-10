@@ -1,5 +1,5 @@
 import { InteractionResponseFlags, InteractionResponseType } from "discord-interactions";
-import { ClassRow, JsonResponse, organizeClassList } from "../util";
+import { ClassRow, displayTerm, JsonResponse, organizeClassList } from "../util";
 import { terms } from "../db";
 
 export async function mutualsCommand(env: Env, userId: string, options: Map<string, string>): Promise<Response> {
@@ -30,7 +30,7 @@ export async function mutualsCommand(env: Env, userId: string, options: Map<stri
     return new JsonResponse({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: "You do not have any classes in common with <@" + options.get("user") + ">",
+        content: "You do not have any classes in common with <@" + options.get("user") + ">" + (options.has("term") ? " during " + displayTerm(options.get("term") as string) : "") + ".",
         allowed_mentions: {
           users: [options.get("user")]
         },
@@ -42,7 +42,7 @@ export async function mutualsCommand(env: Env, userId: string, options: Map<stri
   return new JsonResponse({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: "You have " + (commonClassList.length === 1 ? "1 class" : commonClassList.length + " classes") + " in common with <@" + options.get("user") + ">:\n- " + commonClassList.join("\n- "),
+      content: "You have " + (commonClassList.length === 1 ? "1 class" : commonClassList.length + " classes") + " in common with <@" + options.get("user") + ">" + (options.has("term") ? " during " + displayTerm(options.get("term") as string) : "") + ":\n- " + commonClassList.join("\n- "),
       allowed_mentions: {
         users: [options.get("user")]
       },

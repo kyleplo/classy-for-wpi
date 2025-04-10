@@ -23,13 +23,28 @@ if (!applicationId) {
 
 const url = `https://discord.com/api/v10/applications/${applicationId}/commands`;
 const termChoices = [
-  {name: "A term", value: "A"},
-  {name: "B term", value: "B"},
-  {name: "C term", value: "C"},
-  {name: "D term", value: "D"},
-  {name: "E1 term", value: "E1"},
-  {name: "E2 term", value: "E2"}
+  {name: "A term 2024", value: "A"},
+  {name: "B term 2024", value: "B"},
+  {name: "C term 2025", value: "C"},
+  {name: "D term 2025", value: "D"},
+  {name: "E1 term 2025", value: "E1"},
+  {name: "E2 term 2025", value: "E2"}
 ]
+const yearChoices = [
+  {name: "2024", value: "2024"},
+  {name: "2025", value: "2025"}
+]
+var year = 2025;
+while(year <= new Date().getFullYear()) {
+  termChoices.push({name: "A term " + year, value: "A" + year});
+  termChoices.push({name: "B term " + year, value: "B" + year});
+  year++;
+  termChoices.push({name: "C term " + year, value: "C" + year});
+  termChoices.push({name: "D term " + year, value: "D" + year});
+  termChoices.push({name: "E1 term " + year, value: "E1" + year});
+  termChoices.push({name: "E2 term " + year, value: "E2" + year});
+  yearChoices.push({name: year.toString(), value: year.toString()})
+}
 const dormChoices = [
   {name: "Daniels Hall", value: "daniels"},
   {name: "East Hall", value: "east"},
@@ -101,7 +116,7 @@ const response = await fetch(url, {
     {
       type: 1,// Slash command
       name: "list",
-      description: "List all classes that a user is taking",
+      description: "List all classes that a user is in",
       options: [
         {
           type: 6,// USER
@@ -144,6 +159,13 @@ const response = await fetch(url, {
         type: 3,// STRING
         name: "section3",
         description: "Additional section of the class to add yourself to (ex. AX02)",
+        required: false
+      },
+      {
+        type: 3,// STRING
+        name: "year",
+        description: "Year of the class sections to add (defaults to current year)",
+        choices: yearChoices,
         required: false
       }],
     },
@@ -226,7 +248,7 @@ const response = await fetch(url, {
         {
           type: 11,// ATTACHMENT,
           name: "file",
-          description: "File from Workday containing your course list",
+          description: "File from Workday containing your course list (leave blank for instructions)",
           required: false
         },
         {

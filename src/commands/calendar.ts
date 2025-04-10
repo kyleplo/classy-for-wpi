@@ -1,5 +1,5 @@
 import { InteractionResponseType, InteractionResponseFlags } from 'discord-interactions';
-import { ClassRow, getClassString, JsonResponse } from '../util';
+import { academicYearFromTerm, ClassRow, displayTerm, getClassString, JsonResponse } from '../util';
 import { classes, terms } from '../db';
 
 import ical, { ICalEventRepeatingFreq, ICalWeekday } from 'ical-generator';
@@ -27,23 +27,26 @@ export async function generateCalendarResponse(env: Env, userId: string | null, 
 	if (!termSelection) {
 		includeTerms = ["A", "B", "C", "D", "E1", "E2", "Spring", "Fall", "Summer"];
 	} else {
-		includeTerms = [termSelection, terms[termSelection].partOf];
+		includeTerms = [termSelection];
+		if (terms[termSelection].partOf !== "none") {
+			includeTerms.push(terms[termSelection].partOf);
+		}
 	}
 
 	const calendar = ical({
-		name: `${env.SCHOOL_NAME} ${termSelection ? `${termSelection} term ` : ``}Schedule`,
+		name: `${env.SCHOOL_NAME} ${termSelection ? `${displayTerm(termSelection)} ` : ``}Schedule`,
 		timezone: "America/New_York",
 		prodId: "-//kyleplo.com//classy//EN"
 	});
 
 	sections.results.forEach(value => {
-		const section = classes[value.classId].sections[value.sectionId];
+		const section = classes[value.classId].years[academicYearFromTerm(value.term)][value.sectionId];
 
 		if(!section.starts || !section.ends || !section.room || !section.term){
 			return;
 		}
 
-		if(!includeTerms.includes(section.term)){
+		if(!includeTerms.find(term => (section.term as string).startsWith(term))){
 			return;
 		}
 

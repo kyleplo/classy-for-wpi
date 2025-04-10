@@ -1,5 +1,5 @@
 import { InteractionResponseType } from "discord-interactions";
-import { ClassRow, Writer, JsonResponse, currentTerm } from "../util";
+import { ClassRow, Writer, JsonResponse, currentTerm, displayTerm, academicYearFromTerm } from "../util";
 import { make, encodePNGToStream, registerFont, Context, Bitmap } from "pureimage/dist/index.js";
 import { classes, terms } from "../db";
 
@@ -10,7 +10,7 @@ export async function scheduleCommand(env: Env, userId: string, options: Map<str
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [{
-        title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${term} term`,
+        title: `${options.has("userName") ? options.get("userName") + "'s s" : "S"}chedule for ${displayTerm(term)}`,
         image: {
           url: `${env.BOT_LINK}/schedule.png?userId=${options.get("user") || userId}&term=${term}&v=${Date.now()}`
         },
@@ -79,14 +79,14 @@ function ellipsis(ctx: Context, text: string, width: number): string {
 
 var image: Bitmap, ctx: Context;
 
-function prepareSchedule(schedule: ClassRow[]){
+function prepareSchedule(schedule: ClassRow[], term: string){
   var earliest = 1290;
   var latest = 360;
   var classColors: {[classId: string]: string} = {};
   var usedColors = 0;
 
   schedule.forEach(value => {
-    const section = classes[value.classId].sections[value.sectionId];
+    const section = classes[value.classId].years[academicYearFromTerm(term)][value.sectionId];
 
     if(!section.starts || !section.ends){
       return;
@@ -107,7 +107,7 @@ function prepareSchedule(schedule: ClassRow[]){
 }
 
 async function generateScheduleImage(term: string, schedule: ClassRow[]): Promise<ReadableStream> {
-  const { earliest, latest, classColors } = prepareSchedule(schedule);
+  const { earliest, latest, classColors } = prepareSchedule(schedule, term);
   const pxPerMin = 575 / (latest - earliest);
   
   if(!image || !ctx){
@@ -139,7 +139,7 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
   }
 
   schedule.forEach(value => {
-    const section = classes[value.classId.toUpperCase()].sections[value.sectionId.toUpperCase()];
+    const section = classes[value.classId.toUpperCase()].years[academicYearFromTerm(term)][value.sectionId.toUpperCase()];
 
     if(!section.days){
       return;
@@ -176,7 +176,7 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
 }
 
 async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise<Response> {
-  const { earliest, latest, classColors } = prepareSchedule(schedule);
+  const { earliest, latest, classColors } = prepareSchedule(schedule, term);
 
   const hours: {
     hour: number,
@@ -199,7 +199,7 @@ async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise
   }
 
   schedule.forEach(value => {
-    const section = classes[value.classId.toUpperCase()].sections[value.sectionId.toUpperCase()];
+    const section = classes[value.classId.toUpperCase()].years[academicYearFromTerm(term)][value.sectionId.toUpperCase()];
 
     if(!section.days){
       return;
@@ -301,7 +301,7 @@ async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise
   </head>
   <body>
     <table>
-      <tr><th>${term} term</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
+      <tr><th>${displayTerm(term)}</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
       ${hours.map(h => {
         return `<tr><th scope="row">${(h.hour > 12 ? h.hour - 12 : h.hour) + (h.hour > 11 ? "PM" : "AM")}</th>${
           h.classes.map(section => {
