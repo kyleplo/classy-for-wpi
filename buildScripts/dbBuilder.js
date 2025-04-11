@@ -61,9 +61,6 @@ listing["Report_Entry"].forEach(entry => {
 
   var year = new Date(starts).getFullYear();
   const term = normalizeTerm(entry["Starting_Academic_Period_Type"].split(" ")[0] + year);
-  if (!(term.startsWith("A") || term.startsWith("B") || term.startsWith("Fall"))) {
-    year--;
-  }
 
   if(!classes[section.course]){
     classes[section.course] = {

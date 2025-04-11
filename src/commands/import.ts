@@ -42,16 +42,21 @@ export async function importCommand(env: Env, userId: string, options: Map<strin
     }
 
     const batch: D1PreparedStatement[] = [];
+    var headers: string[] = [];
 
     sheet.worksheets[0].eachRow(row => {
       if(!Array.isArray(row.values)){
         return;
       }
 
-      if(row.values[8] === "Registered" && row.values[7]){
+      if (row.values.includes("Registration Status") && row.values.includes("Section") && row.values.includes("Start Date")) {
+        headers = row.values as string[];
+      }
+
+      if(headers.length && (row.values[headers.indexOf("Registration Status")] === "Registered" || row.values[headers.indexOf("Registration Status")] === "Completed") && row.values[headers.indexOf("Section")] && row.values[headers.indexOf("Start Date")]){
         try {
-          const year = new Date(row.values[13] as string).getFullYear().toString();
-          const section = parseClassCode(row.values[7].toString(), year);
+          const year = new Date(row.values[headers.indexOf("Start Date")] as string).getFullYear().toString();
+          const section = parseClassCode(row.values[headers.indexOf("Section")] as string, year);
 
           if(!section){
             return;
