@@ -169,27 +169,27 @@ export function currentAcademicYear(): number {
 export function academicYearFromTerm(term: string): number {
 	var year = parseInt(term.slice(term.length - 4));
 	if (isNaN(year)) {
-		return 2024;
-	}
-	if (!(term.startsWith("A") || term.startsWith("B") || term.startsWith("Fall"))) {
-		year--;
+		if (term.startsWith("A") || term.startsWith("B") || term.startsWith("Fall")) {
+			return 2024;
+		}
+		return 2025;
 	}
 	return year;
 }
 
-export function displayTerm(term: string): string {
+export function displayTerm(term: string, includeYear = true): string {
 	if (term.length < 4 || isNaN(parseInt(term[term.length - 4]))) {
 		switch (term) {
 			case "A":
-				return "A term 2024";
+				return "A term" + (includeYear ? " 2024" : "");
 			case "B":
-				return "B term 2024";
+				return "B term" + (includeYear ? " 2024" : "");
 			case "Fall":
-				return "Fall term 2024";
+				return "Fall term" + (includeYear ? " 2024" : "");
 			default:
-				return term + " term 2025";
+				return term + " term" + (includeYear ? " 2025" : "");
 		}
 	}
 
-	return term.slice(0, term.length - 4) + " term " + term.slice(term.length - 4);
+	return term.slice(0, term.length - 4) + " term" + (includeYear ? " " + term.slice(term.length - 4) : "");
 }

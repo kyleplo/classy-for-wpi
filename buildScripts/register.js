@@ -220,7 +220,14 @@ const response = await fetch(url, {
         description: "Dorm building to filter by (optional)",
         required: false,
         choices: dormChoices
-      }],
+      },
+      {
+        type: 3,// STRING,
+        name: "term",
+        description: "Term to filter by (defaults to none)",
+        required: false,
+        choices: termChoices
+      },],
     },
     {
       type: 1,// Slash command
