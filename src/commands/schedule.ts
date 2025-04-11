@@ -118,14 +118,11 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
     await font.load();
   }
 
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, 800, 600);
-
   ctx.fillStyle = "#ffffff";
   ctx.font = "14px font";
-
-  ctx.fillText(term + " term", 5, 15);
-
+  console.time("setup")
+  ctx.fillText(displayTerm(term, false), 5, 15);
+  console.timeEnd("setup")
   for(var i = 0;i < 5;i++){
     ctx.fillRect(50 + i * 150, 0, 1, 600);
     ctx.fillText(daysOfWeek[i], 55 + i * 150, 15);
@@ -155,17 +152,17 @@ async function generateScheduleImage(term: string, schedule: ClassRow[]): Promis
       const sectionHeight = pxPerMin * (section.ends - section.starts);
 
       ctx.fillStyle = classColors[value.classId];
-      ctx.fillRect(sectionX - 2, sectionY - 2, 144, sectionHeight);
-      ctx.fillStyle = "#000000";
-      ctx.fillText(ellipsis(ctx, value.classId.toUpperCase() + "-" + value.sectionId.toUpperCase(), 140), sectionX, 10 + sectionY);
-      if(sectionHeight > 30){
-        ctx.fillText(ellipsis(ctx, classes[value.classId].name, 140), sectionX, 25 + sectionY);
+      ctx.fillRect(sectionX - 4, sectionY - 4, 149, 5);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(ellipsis(ctx, value.classId.toUpperCase() + "-" + value.sectionId.toUpperCase(), 140), sectionX, 15 + sectionY);
+      if(sectionHeight > 35){
+        ctx.fillText(ellipsis(ctx, classes[value.classId].name, 140), sectionX, 30 + sectionY);
       }
-      if(sectionHeight > 45){
-        ctx.fillText(ellipsis(ctx, section.room, 140), sectionX, 40 + sectionY);
+      if(sectionHeight > 50){
+        ctx.fillText(ellipsis(ctx, section.room, 140), sectionX, 45 + sectionY);
       }
-      if(sectionHeight > 60){
-        ctx.fillText(ellipsis(ctx, section.type, 140), sectionX, 55 + sectionY);
+      if(sectionHeight > 65){
+        ctx.fillText(ellipsis(ctx, section.type, 140), sectionX, 60 + sectionY);
       }
     });
   });
@@ -287,6 +284,13 @@ async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise
         width: max(200px, calc(20vw - 20px));
       }
 
+      select {
+        font: inherit;
+        color: inherit;
+        background: inherit;
+        border: none;
+      }
+
       @media (prefers-color-scheme: light) {
         html {
           color: black;
@@ -301,7 +305,18 @@ async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise
   </head>
   <body>
     <table>
-      <tr><th>${displayTerm(term)}</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
+      <tr>
+        <th>
+          <select>
+            ${Object.entries(terms).map(listTerm => {
+              if (listTerm[1].partOf === "none") {
+                return "";
+              }
+              return `<option value="${listTerm[0]}"${listTerm[0] === term ? " selected" : ""}>${displayTerm(listTerm[0])}</option>`;
+            })}
+          </select>
+        </th>
+        <th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr>
       ${hours.map(h => {
         return `<tr><th scope="row">${(h.hour > 12 ? h.hour - 12 : h.hour) + (h.hour > 11 ? "PM" : "AM")}</th>${
           h.classes.map(section => {
@@ -316,6 +331,15 @@ async function generateSchedulePage(term: string, schedule: ClassRow[]): Promise
         }</tr>`
       }).join("")}
     </table>
+    <script>
+      window.addEventListener("load", () => {
+        document.querySelector("select").addEventListener("change", e => {
+          const url = new URL(location.href);
+          url.searchParams.set("term", e.target.value);
+          location.href = url.href;
+        });
+      });
+    </script>
   </body>
 </html>`, {
     headers: {
