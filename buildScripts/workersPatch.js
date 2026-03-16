@@ -1,7 +1,5 @@
 import { readFileSync, writeFile } from "fs";
 
-writeFile("./node_modules/node-xlsx/dist/chunk-ID6OMQGT.js", readFileSync("./node_modules/node-xlsx/dist/chunk-ID6OMQGT.js", () => {}).toString().replace('import * as fs from "fs";', "const fs = {};"), () => {});
-
 writeFile("./node_modules/pureimage/dist/image.js", readFileSync("./node_modules/pureimage/dist/image.js", () => {}).toString().replace('import * as _PNG from "pngjs";', `import * as _PNG from "pngjs/browser.js";`), () => {});
 
 writeFile("./node_modules/opentype.js/src/opentype.js", readFileSync("./node_modules/opentype.js/src/opentype.js", () => {}).toString().replace(`var isNode = typeof window === 'undefined';`, `var isNode = false;`).replace(`function loadFromUrl(url, callback) {
