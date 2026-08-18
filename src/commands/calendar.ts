@@ -42,7 +42,7 @@ export async function generateCalendarResponse(env: Env, userId: string | null, 
 	sections.results.forEach(value => {
 		const section = classes[value.classId].years[academicYearFromTerm(value.term)][value.sectionId];
 
-		if(!section.starts || !section.ends || !section.room || !section.term){
+		if(!section || !section.starts || !section.ends || !section.room || !section.term || !terms[section.term]){
 			return;
 		}
 
